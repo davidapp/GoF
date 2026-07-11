@@ -1,0 +1,37 @@
+# 编译产物 / 可执行文件
+*.o
+*.obj
+*.exe
+*.out
+a.out
+demo
+main
+*.class
+*.dSYM/
+
+# 已有 C++ 示例遗留的二进制（仅忽略该二进制文件本身，不影响同名目录下的源码）
+/cpp/singleton/singleton
+
+# Rust
+target/
+*.rlib
+*.pdb
+
+# Go
+# （go run 不产出文件；如用 go build 产生的二进制被上面的规则忽略）
+
+# Node / TS
+node_modules/
+.tsbuildinfo
+
+# Python
+__pycache__/
+*.pyc
+.mypy_cache/
+.pytest_cache/
+
+# 编辑器 / 系统
+.DS_Store
+.idea/
+.vscode/
+*.swp
