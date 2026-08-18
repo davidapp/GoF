@@ -5,6 +5,52 @@
 在不改变元素类的前提下，为一组类型定义新的操作。把"数据结构"与"作用在其上的操作"
 分离，新增操作只需新增一个访问者，而不必修改每个元素类型。
 
+<!-- gof-architecture-diagram -->
+## 架构图
+
+> **生活类比**：图形园的种类很少变（圆、矩形），但巡检工作经常加：今天来面积员，明天来画师，后天新增周长员。图形只负责开门（accept），工具箱在访问者身上 —— 双重分派。
+
+```mermaid
+flowchart LR
+    classDef client fill:#C2E5FF,stroke:#007AD2,color:#1E1E1E
+    classDef abs fill:#DCCCFF,stroke:#874FFF,color:#1E1E1E
+    classDef concrete fill:#CDF4D3,stroke:#3E9B4B,color:#1E1E1E
+    classDef extra fill:#FFE0C2,stroke:#EB7500,color:#1E1E1E
+    classDef shared fill:#FFECBD,stroke:#E8A302,color:#1E1E1E
+    classDef hub fill:#C6FAF6,stroke:#5AD8CC,color:#1E1E1E
+    caller["客户端带着访问者进园"]
+    subgraph park ["图形园 元素类型稳定"]
+        circle["圆 accept"]
+        rect["矩形 accept"]
+    end
+    subgraph inspectors ["巡检员 操作可增长"]
+        area["面积员 visit_circle / visit_rectangle"]
+        draw["画师"]
+        peri["周长员 新增操作"]
+    end
+    caller --> circle
+    caller --> rect
+    circle -->|"双重分派"| area
+    circle --> draw
+    circle --> peri
+    rect --> area
+    rect --> draw
+    rect --> peri
+    class caller client
+    class circle,rect concrete
+    class area,draw,peri extra
+    style park fill:#CDF4D3,stroke:#3E9B4B
+    style inspectors fill:#FFE0C2,stroke:#EB7500
+```
+
+| 图中角色 | 本仓库示例 |
+|---------|-----------|
+| 图形园 | Circle / Rectangle，元素稳定 |
+| 开门 | accept 第一次分派 |
+| 巡检员 | Area / Draw / Perimeter，操作可增长 |
+
+23 张图的完整图鉴见 [`docs/README.md`](../../docs/README.md#visitor-访问者)。
+
 ## 适用场景
 
 - 需要对一组稳定的类型（图形、AST 节点）不断新增不同种类的操作（求面积、渲染、序列化……）

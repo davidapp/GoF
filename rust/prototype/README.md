@@ -3,6 +3,43 @@
 ## 意图
 通过复制一个已有实例（原型）来创建新对象，而不是通过 `new` 走完整的构造流程，尤其适合创建成本较高或希望保留某个实例当前状态副本的场景。
 
+<!-- gof-architecture-diagram -->
+## 架构图
+
+> **生活类比**：印章柜里放着圆形、矩形两枚母章。要新图时不从零雕刻，盖一下（clone）就得到互不干扰的副本，改颜色也不脏了母章。
+
+```mermaid
+flowchart LR
+    classDef client fill:#C2E5FF,stroke:#007AD2,color:#1E1E1E
+    classDef abs fill:#DCCCFF,stroke:#874FFF,color:#1E1E1E
+    classDef concrete fill:#CDF4D3,stroke:#3E9B4B,color:#1E1E1E
+    classDef extra fill:#FFE0C2,stroke:#EB7500,color:#1E1E1E
+    classDef shared fill:#FFECBD,stroke:#E8A302,color:#1E1E1E
+    classDef hub fill:#C6FAF6,stroke:#5AD8CC,color:#1E1E1E
+    subgraph cabinet ["印章柜 原型注册表"]
+        circle0["圆形母章"]
+        rect0["矩形母章"]
+    end
+    c1["红色圆 副本"]
+    c2["蓝色圆 副本"]
+    r1["平移后的矩形副本"]
+    circle0 -->|"clone 深拷贝"| c1
+    circle0 -->|"clone 深拷贝"| c2
+    rect0 -->|"clone 深拷贝"| r1
+    c1 -.->|"改颜色不影响母章"| circle0
+    class circle0,rect0 shared
+    class c1,c2,r1 concrete
+    style cabinet fill:#FFECBD,stroke:#E8A302
+```
+
+| 图中角色 | 本仓库示例 |
+|---------|-----------|
+| 母章 / 原型 | Shape.clone，默认 deepcopy |
+| 印章柜 | 按名字取模板的原型注册表 |
+| 盖出的副本 | 改颜色、位置、标签，不影响原件 |
+
+23 张图的完整图鉴见 [`docs/README.md`](../../docs/README.md#prototype-原型)。
+
 ## 适用场景
 - 创建对象的成本较高（初始化复杂/依赖较多），复制一个现成实例更划算
 - 需要在运行时动态获得某个对象的一份独立副本再各自修改，互不影响

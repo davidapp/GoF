@@ -4,6 +4,46 @@
 
 为另一个对象提供一个替身或占位符，以控制对它的访问。代理与真实对象实现同一接口，客户端无法区分二者，从而可以在中间插入懒加载、权限校验、缓存等逻辑。
 
+<!-- gof-architecture-diagram -->
+## 架构图
+
+> **生活类比**：相册先摆三张空相框。点开才从仓库搬出真照片；没点开的那张，磁盘加载一次都不会发生。
+
+```mermaid
+flowchart LR
+    classDef client fill:#C2E5FF,stroke:#007AD2,color:#1E1E1E
+    classDef abs fill:#DCCCFF,stroke:#874FFF,color:#1E1E1E
+    classDef concrete fill:#CDF4D3,stroke:#3E9B4B,color:#1E1E1E
+    classDef extra fill:#FFE0C2,stroke:#EB7500,color:#1E1E1E
+    classDef shared fill:#FFECBD,stroke:#E8A302,color:#1E1E1E
+    classDef hub fill:#C6FAF6,stroke:#5AD8CC,color:#1E1E1E
+    album["相册 display"]
+    p1["代理 photo1 占位"]
+    p2["代理 photo2 占位"]
+    p3["代理 photo3 从未点开"]
+    real1["真图 磁盘加载"]
+    real2["真图 磁盘加载"]
+    skip["从未加载"]
+    album --> p1
+    album --> p2
+    album --> p3
+    p1 -->|"第一次 display"| real1
+    p2 -->|"第一次 display"| real2
+    p3 --x skip
+    class album client
+    class p1,p2,p3 extra
+    class real1,real2 concrete
+    class skip shared
+```
+
+| 图中角色 | 本仓库示例 |
+|---------|-----------|
+| 相册 | 客户端，只认 Image.display |
+| 空相框 | ImageProxy 虚拟代理 |
+| 仓库真图 | RealImage，构造时才加载 |
+
+23 张图的完整图鉴见 [`docs/README.md`](../../docs/README.md#proxy-代理)。
+
 ## 适用场景
 
 - 真实对象的创建/加载成本很高，希望延迟到真正需要时才创建（虚拟代理/懒加载）

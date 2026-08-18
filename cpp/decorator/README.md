@@ -4,6 +4,41 @@
 
 动态地给一个对象添加一些额外的职责。就增加功能而言，装饰器模式相比生成子类更为灵活，可以在运行时按任意顺序自由组合。
 
+<!-- gof-architecture-diagram -->
+## 架构图
+
+> **生活类比**：咖啡加料：浓缩是内核，外面一层牛奶、一层糖、一层奶油。每一层都还是「一杯咖啡」，点单时问 cost，层层转发并加价。
+
+```mermaid
+flowchart LR
+    classDef client fill:#C2E5FF,stroke:#007AD2,color:#1E1E1E
+    classDef abs fill:#DCCCFF,stroke:#874FFF,color:#1E1E1E
+    classDef concrete fill:#CDF4D3,stroke:#3E9B4B,color:#1E1E1E
+    classDef extra fill:#FFE0C2,stroke:#EB7500,color:#1E1E1E
+    classDef shared fill:#FFECBD,stroke:#E8A302,color:#1E1E1E
+    classDef hub fill:#C6FAF6,stroke:#5AD8CC,color:#1E1E1E
+    guest["顾客 只认 Coffee"]
+    whip["奶油包装 +6"]
+    sugar["糖包装 +2"]
+    milk["牛奶包装 +4"]
+    espresso["浓缩 Espresso 12"]
+    guest ==> whip
+    whip -->|"转发并加价"| sugar
+    sugar -->|"转发并加价"| milk
+    milk -->|"转发并加价"| espresso
+    class guest client
+    class whip,sugar,milk extra
+    class espresso concrete
+```
+
+| 图中角色 | 本仓库示例 |
+|---------|-----------|
+| 内核 | Espresso / Americano 具体构件 |
+| 加料包装 | Milk / Sugar / WhippedCream 装饰器 |
+| 统一接口 | Coffee.cost / description |
+
+23 张图的完整图鉴见 [`docs/README.md`](../../docs/README.md#decorator-装饰器)。
+
 ## 适用场景
 
 - 需要在不影响其他对象的情况下，动态、透明地给单个对象添加职责

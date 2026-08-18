@@ -5,6 +5,45 @@
 将对象组合成树形结构以表示"部分-整体"的层次关系，使客户端对单个对象（叶子）和
 组合对象（容器）的使用具有一致性——调用同一个接口，无需在代码里写 `isinstance` 判断。
 
+<!-- gof-architecture-diagram -->
+## 架构图
+
+> **生活类比**：文件夹套娃：根目录装着子目录和文件。问「有多大」时，文件报自己的字节，目录把孩子们的大小加起来。客户端从不写 if 是文件还是目录。
+
+```mermaid
+flowchart TB
+    classDef client fill:#C2E5FF,stroke:#007AD2,color:#1E1E1E
+    classDef abs fill:#DCCCFF,stroke:#874FFF,color:#1E1E1E
+    classDef concrete fill:#CDF4D3,stroke:#3E9B4B,color:#1E1E1E
+    classDef extra fill:#FFE0C2,stroke:#EB7500,color:#1E1E1E
+    classDef shared fill:#FFECBD,stroke:#E8A302,color:#1E1E1E
+    classDef hub fill:#C6FAF6,stroke:#5AD8CC,color:#1E1E1E
+    caller["客户端 只认同一接口"]
+    root["根目录 /  组合"]
+    docs["docs/  组合"]
+    src["src/  组合"]
+    readme["README.md  叶子"]
+    guide["guide.md  叶子"]
+    mainPy["main.py  叶子"]
+    caller ==> root
+    root --> docs
+    root --> src
+    root --> readme
+    docs --> guide
+    src --> mainPy
+    class caller client
+    class root,docs,src abs
+    class readme,guide,mainPy concrete
+```
+
+| 图中角色 | 本仓库示例 |
+|---------|-----------|
+| 统一接口 | FileSystemNode.size / display |
+| 叶子 | File |
+| 容器 | Directory，递归包含子节点 |
+
+23 张图的完整图鉴见 [`docs/README.md`](../../docs/README.md#composite-组合)。
+
 ## 适用场景
 
 - 需要表示对象的"部分-整体"层次结构（文件系统、组织架构、UI 控件树等）

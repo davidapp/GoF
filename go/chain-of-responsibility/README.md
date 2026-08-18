@@ -5,6 +5,46 @@
 将请求沿着一条由多个处理者组成的链传递，每个处理者判断自己能否处理，
 不能处理则转交给下一个，直到有人处理或链尾，从而解耦请求发送者与具体处理者。
 
+<!-- gof-architecture-diagram -->
+## 架构图
+
+> **生活类比**：采购单沿公章接力：经理能批 5000 就盖章，否则递给总监，再递给 CEO。提交人只把单子交给第一环，从不管最终谁批。
+
+```mermaid
+flowchart LR
+    classDef client fill:#C2E5FF,stroke:#007AD2,color:#1E1E1E
+    classDef abs fill:#DCCCFF,stroke:#874FFF,color:#1E1E1E
+    classDef concrete fill:#CDF4D3,stroke:#3E9B4B,color:#1E1E1E
+    classDef extra fill:#FFE0C2,stroke:#EB7500,color:#1E1E1E
+    classDef shared fill:#FFECBD,stroke:#E8A302,color:#1E1E1E
+    classDef hub fill:#C6FAF6,stroke:#5AD8CC,color:#1E1E1E
+    req[/采购申请单/]
+    mgr{"经理 限额 5000"}
+    director{"总监 限额 20000"}
+    ceo{"CEO 无限额"}
+    approved[/批准/]
+    rejected[/超限拒绝/]
+    req ==> mgr
+    mgr -->|"额度内"| approved
+    mgr -->|"超出 传递"| director
+    director -->|"额度内"| approved
+    director -->|"超出 传递"| ceo
+    ceo -->|"额度内"| approved
+    ceo -->|"仍超出"| rejected
+    class req client
+    class mgr,director,ceo extra
+    class approved concrete
+    class rejected shared
+```
+
+| 图中角色 | 本仓库示例 |
+|---------|-----------|
+| 采购单 | PurchaseRequest |
+| 审批链 | Manager → Director → CEO |
+| 提交人 | 只调用链头 handle |
+
+23 张图的完整图鉴见 [`docs/README.md`](../../docs/README.md#chain-of-responsibility-责任链)。
+
 ## 适用场景
 
 - 多个对象都可能处理同一个请求，具体由哪个处理要在运行时确定

@@ -4,6 +4,43 @@
 定义一系列算法，把它们各自封装起来，并使它们可以互相替换。策略模式让算法的变化独立于使
 用算法的客户端，客户端只需在运行时选择/切换具体策略，无需修改自身代码。
 
+<!-- gof-architecture-diagram -->
+## 架构图
+
+> **生活类比**：收银台插卡：购物车不关心怎么扣款，结账时插入信用卡、PayPal 或加密货币策略卡。用户在结算页改选，算法当场替换。
+
+```mermaid
+flowchart TB
+    classDef client fill:#C2E5FF,stroke:#007AD2,color:#1E1E1E
+    classDef abs fill:#DCCCFF,stroke:#874FFF,color:#1E1E1E
+    classDef concrete fill:#CDF4D3,stroke:#3E9B4B,color:#1E1E1E
+    classDef extra fill:#FFE0C2,stroke:#EB7500,color:#1E1E1E
+    classDef shared fill:#FFECBD,stroke:#E8A302,color:#1E1E1E
+    classDef hub fill:#C6FAF6,stroke:#5AD8CC,color:#1E1E1E
+    user["顾客结账"]
+    cart["购物车 Context"]
+    slot{{"当前支付策略卡槽"}}
+    cc["信用卡策略"]
+    pp["PayPal 策略"]
+    crypto["加密货币策略"]
+    user ==> cart
+    cart ==> slot
+    slot -->|"可运行时替换"| cc
+    slot -->|"可运行时替换"| pp
+    slot -->|"可运行时替换"| crypto
+    class user,cart client
+    class slot abs
+    class cc,pp,crypto concrete
+```
+
+| 图中角色 | 本仓库示例 |
+|---------|-----------|
+| 购物车 | ShoppingCart 上下文 |
+| 卡槽 | PaymentStrategy 可替换算法 |
+| 策略卡 | CreditCard / PayPal / Crypto |
+
+23 张图的完整图鉴见 [`docs/README.md`](../../docs/README.md#strategy-策略)。
+
 ## 适用场景
 - 许多相关的类仅仅是行为有异，可以用策略动态选择其中一种行为。
 - 需要使用一个算法的不同变体（不同的支付方式、不同的排序规则、不同的折扣计算）。

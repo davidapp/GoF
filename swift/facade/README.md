@@ -3,6 +3,39 @@
 ## 意图
 为子系统中的一组接口提供一个一致的高层接口，使子系统更容易使用，同时降低客户端与子系统内部复杂性之间的耦合。
 
+<!-- gof-architecture-diagram -->
+## 架构图
+
+> **生活类比**：家庭影院一键观影：观众只按「看电影」。外观对象按顺序关灯、开投影、调功放、按播放。高级玩家仍可绕过外观直接拨弄每个设备。
+
+```mermaid
+flowchart TB
+    classDef client fill:#C2E5FF,stroke:#007AD2,color:#1E1E1E
+    classDef abs fill:#DCCCFF,stroke:#874FFF,color:#1E1E1E
+    classDef concrete fill:#CDF4D3,stroke:#3E9B4B,color:#1E1E1E
+    classDef extra fill:#FFE0C2,stroke:#EB7500,color:#1E1E1E
+    classDef shared fill:#FFECBD,stroke:#E8A302,color:#1E1E1E
+    classDef hub fill:#C6FAF6,stroke:#5AD8CC,color:#1E1E1E
+    audience["观众 一键看电影"]
+    facade["HomeTheaterFacade 万能遥控"]
+    audience ==> facade
+    facade --> lights["灯光 dim 20"]
+    facade --> proj["投影 HDMI"]
+    facade --> amp["功放 音量 15"]
+    facade --> player["播放器 播星际穿越"]
+    class audience client
+    class facade hub
+    class lights,proj,amp,player concrete
+```
+
+| 图中角色 | 本仓库示例 |
+|---------|-----------|
+| 观众 | 客户端，只调 watch_movie |
+| 万能遥控 | HomeTheaterFacade |
+| 子系统 | Lights / Projector / Amplifier / Player |
+
+23 张图的完整图鉴见 [`docs/README.md`](../../docs/README.md#facade-外观)。
+
 ## 适用场景
 - 子系统随着演化变得越来越复杂，包含大量类，客户端直接使用成本很高。
 - 需要为一个复杂子系统提供一个简单的入口，同时不隐藏子系统的高级功能（客户端仍可绕过外观直接访问子系统）。

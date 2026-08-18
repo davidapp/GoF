@@ -5,6 +5,52 @@
 在一个方法中定义一个算法的骨架，而将一些步骤延迟到子类中实现。
 模板方法使得子类可以在不改变算法结构的情况下，重新定义算法的某些特定步骤。
 
+<!-- gof-architecture-diagram -->
+## 架构图
+
+> **生活类比**：冲泡饮料的菜谱骨架写死：烧水 → 冲泡 → 倒杯 → 是否加料。茶放茶叶加柠檬，咖啡放咖啡粉加糖奶，黑咖啡用钩子跳过加料。流程顺序谁也不能改。
+
+```mermaid
+flowchart TB
+    classDef client fill:#C2E5FF,stroke:#007AD2,color:#1E1E1E
+    classDef abs fill:#DCCCFF,stroke:#874FFF,color:#1E1E1E
+    classDef concrete fill:#CDF4D3,stroke:#3E9B4B,color:#1E1E1E
+    classDef extra fill:#FFE0C2,stroke:#EB7500,color:#1E1E1E
+    classDef shared fill:#FFECBD,stroke:#E8A302,color:#1E1E1E
+    classDef hub fill:#C6FAF6,stroke:#5AD8CC,color:#1E1E1E
+    start([prepare 模板骨架 顺序固定])
+    boil["烧水 固定步骤"]
+    brew{"冲泡 子类实现"}
+    pour["倒杯 固定步骤"]
+    hook{"要加料吗 钩子"}
+    teaBrew["茶：浸泡茶叶"]
+    coffeeBrew["咖啡：冲泡咖啡粉"]
+    lemon["加柠檬"]
+    milkSugar["加糖奶"]
+    done([完成])
+    start --> boil --> brew
+    brew --> teaBrew --> pour
+    brew --> coffeeBrew --> pour
+    pour --> hook
+    hook -->|"茶 / 咖啡 是"| lemon
+    hook -->|"茶 / 咖啡 是"| milkSugar
+    hook -->|"黑咖啡 否"| done
+    lemon --> done
+    milkSugar --> done
+    class start,boil,pour abs
+    class brew,hook extra
+    class teaBrew,coffeeBrew,lemon,milkSugar concrete
+    class done client
+```
+
+| 图中角色 | 本仓库示例 |
+|---------|-----------|
+| 菜谱骨架 | Beverage.prepare 模板方法 |
+| 可变步骤 | _brew / _add_condiments |
+| 钩子 | _wants_condiments，黑咖啡返回否 |
+
+23 张图的完整图鉴见 [`docs/README.md`](../../docs/README.md#template-method-模板方法)。
+
 ## 适用场景
 
 - 多个子类有共同的行为流程，只是其中某些步骤的具体实现不同（如冲泡各种饮料都要

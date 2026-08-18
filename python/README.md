@@ -7,6 +7,8 @@
 `enum.IntEnum`、`typing.Protocol`（结构化子类型/鸭子类型）等，具体选择哪种
 手法视模式的语义而定，不生搬硬套 Java 式 OOP。全部示例仅依赖标准库。
 
+每个模式 README 在「意图」之后都有一张形象架构图；23 张图的图鉴见 [`../docs/README.md`](../docs/README.md)。
+
 ## 模式一览
 
 ### 创建型（Creational）— 关注对象的创建机制

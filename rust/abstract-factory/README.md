@@ -3,6 +3,55 @@
 ## 意图
 提供一个创建一系列相关或相互依赖对象的接口，而无需指定它们具体的类，保证同一“产品族”内的产品互相搭配一致（比如同一平台风格的 Button 和 Checkbox）。
 
+<!-- gof-architecture-diagram -->
+## 架构图
+
+> **生活类比**：家具店一次卖「成套风格」。Windows 工厂成套出 Win 按钮+Win 复选框，Mac 工厂成套出 Mac 风格 —— 绝不混搭。
+
+```mermaid
+flowchart TB
+    classDef client fill:#C2E5FF,stroke:#007AD2,color:#1E1E1E
+    classDef abs fill:#DCCCFF,stroke:#874FFF,color:#1E1E1E
+    classDef concrete fill:#CDF4D3,stroke:#3E9B4B,color:#1E1E1E
+    classDef extra fill:#FFE0C2,stroke:#EB7500,color:#1E1E1E
+    classDef shared fill:#FFECBD,stroke:#E8A302,color:#1E1E1E
+    classDef hub fill:#C6FAF6,stroke:#5AD8CC,color:#1E1E1E
+    app["Application 顾客只认抽象工厂"]
+    subgraph winShop ["Windows 风格套装"]
+        wf["WindowsFactory"]
+        wb["Win 按钮"]
+        wc["Win 复选框"]
+        wf --> wb
+        wf --> wc
+    end
+    subgraph macShop ["macOS 风格套装"]
+        mf["MacFactory"]
+        mb["Mac 按钮"]
+        mc["Mac 复选框"]
+        mf --> mb
+        mf --> mc
+    end
+    app -->|"成套取用"| wf
+    app -->|"成套取用"| mf
+    mixx["禁止：Win 按钮 + Mac 复选框"]
+    wf --x mixx
+    mf --x mixx
+    class app client
+    class wf,mf abs
+    class wb,wc,mb,mc concrete
+    class mixx extra
+    style winShop fill:#C2E5FF,stroke:#3DADFF
+    style macShop fill:#CDF4D3,stroke:#66D575
+```
+
+| 图中角色 | 本仓库示例 |
+|---------|-----------|
+| 顾客 / 应用 | Application，只依赖 GUIFactory |
+| 成套工厂 | WindowsFactory / MacFactory |
+| 成套产品 | Button + Checkbox 必须同一家族 |
+
+23 张图的完整图鉴见 [`docs/README.md`](../../docs/README.md#abstract-factory-抽象工厂)。
+
 ## 适用场景
 - 系统需要独立于其产品的创建、组合和表示方式
 - 需要保证“一族”产品必须配套使用（不能 Windows 按钮配 macOS 复选框）
