@@ -936,10 +936,19 @@ def patch_language_indexes() -> None:
         text = path.read_text(encoding="utf-8")
         if "形象架构图" in text:
             continue
-        # Insert after the first paragraph block, before ## 模式一览
-        needle = "## 模式一览"
-        if needle not in text:
-            continue
+        needle = None
+        for candidate in ("## 模式一览", "## 模式索引", "## 统一运行方式", "## 统一约定", "## 运行方式"):
+            if candidate in text:
+                needle = candidate
+                break
+        if needle is None:
+            # fall back to the first markdown heading after the title
+            import re
+
+            m = re.search(r"\n## ", text)
+            if not m:
+                continue
+            needle = text[m.start() + 1 : text.find("\n", m.start() + 1)]
         text = text.replace(needle, extra + "\n" + needle, 1)
         path.write_text(text, encoding="utf-8")
 

@@ -23,6 +23,8 @@ g++ -std=c++17 -Wall -Wextra *.cpp -o demo && ./demo
 
 统一要求：C++17、`-Wall -Wextra` 下零警告、除标准库外不引入任何外部依赖。
 
+每个模式 README 在「意图」之后都有一张形象架构图；23 张图的图鉴见 [`../docs/README.md`](../docs/README.md)。
+
 ## 模式索引
 
 ### 创建型（Creational）—— 关注对象的创建机制

@@ -13,6 +13,8 @@ swift main.swift
 
 要求 Swift 5.9+（`swift --version` 确认）。示例仅使用标准库，`Foundation` 按需 `import` 用于 `String(format:)` 等少量能力。
 
+每个模式 README 在「意图」之后都有一张形象架构图；23 张图的图鉴见 [`../docs/README.md`](../docs/README.md)。
+
 ## 模式索引
 
 ### 创建型（Creational）
