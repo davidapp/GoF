@@ -4,6 +4,8 @@
 包含头文件（`@interface`/`@protocol`）、实现文件（`@implementation`）、可运行的 `main.m` 示例，
 以及一份中文 README。所有模式使用统一的场景，方便与仓库中其他语言的实现横向对比。
 
+每个模式 README 在「意图」之后都有一张形象架构图；23 张图的图鉴见 [`../docs/README.md`](../docs/README.md)。
+
 ## 统一运行方式
 
 每个模式目录下都有一个 Makefile：

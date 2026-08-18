@@ -31,6 +31,8 @@ java Main
 > （常见于中文以外语言区域的 Windows），`javac` 可能报 “未映射字符” 之类的编码错误，
 > 此时改用 `javac -encoding UTF-8 *.java` 即可。
 
+每个模式 README 在「意图」之后都有一张形象架构图；23 张图的图鉴见 [`../docs/README.md`](../docs/README.md)。
+
 ## 模式索引
 
 ### 创建型（Creational）—— 关注对象的创建机制

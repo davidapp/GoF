@@ -4,6 +4,42 @@
 
 提供一种方法顺序访问聚合对象中的各个元素，而不暴露该对象的内部表示（切片、链表、树……）。
 
+<!-- gof-architecture-diagram -->
+## 架构图
+
+> **生活类比**：书架抽屉怎么排，读者看不见。正序书签从左往右滑，倒序书签从右往左滑。两种书签各记各的位置，互不干扰。
+
+```mermaid
+flowchart TB
+    classDef client fill:#C2E5FF,stroke:#007AD2,color:#1E1E1E
+    classDef abs fill:#DCCCFF,stroke:#874FFF,color:#1E1E1E
+    classDef concrete fill:#CDF4D3,stroke:#3E9B4B,color:#1E1E1E
+    classDef extra fill:#FFE0C2,stroke:#EB7500,color:#1E1E1E
+    classDef shared fill:#FFECBD,stroke:#E8A302,color:#1E1E1E
+    classDef hub fill:#C6FAF6,stroke:#5AD8CC,color:#1E1E1E
+    reader["读者 for-in"]
+    shelf["书架 BookCollection 内部列表保密"]
+    fwd["正序书签"]
+    rev["倒序书签"]
+    reader --> shelf
+    shelf --> fwd
+    shelf --> rev
+    fwd --> order1["书1 然后 书2 然后 书3"]
+    rev --> order2["书3 然后 书2 然后 书1"]
+    class reader client
+    class shelf abs
+    class fwd,rev extra
+    class order1,order2 concrete
+```
+
+| 图中角色 | 本仓库示例 |
+|---------|-----------|
+| 书架 | BookCollection，内部列表不外露 |
+| 正序书签 | BookIterator |
+| 倒序书签 | ReverseBookIterator |
+
+23 张图的完整图鉴见 [`docs/README.md`](../../docs/README.md#iterator-迭代器)。
+
 ## 适用场景
 
 - 希望遍历集合的方式与集合的内部存储结构解耦，日后可自由更换底层结构

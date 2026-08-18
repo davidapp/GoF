@@ -4,6 +4,42 @@
 
 将一个类的接口转换成客户端期望的另一个接口，使得原本由于接口不兼容而无法一起工作的类可以协同工作。
 
+<!-- gof-architecture-diagram -->
+## 架构图
+
+> **生活类比**：出国旅行的转换插头：手机充电器只认「pay(元)」，Stripe 要「charge(分)」，PayPal 要「美元」。适配器在中间换单位、改方法名，收银台毫无感知。
+
+```mermaid
+flowchart LR
+    classDef client fill:#C2E5FF,stroke:#007AD2,color:#1E1E1E
+    classDef abs fill:#DCCCFF,stroke:#874FFF,color:#1E1E1E
+    classDef concrete fill:#CDF4D3,stroke:#3E9B4B,color:#1E1E1E
+    classDef extra fill:#FFE0C2,stroke:#EB7500,color:#1E1E1E
+    classDef shared fill:#FFECBD,stroke:#E8A302,color:#1E1E1E
+    classDef hub fill:#C6FAF6,stroke:#5AD8CC,color:#1E1E1E
+    cashier["收银台 checkout 只认 pay 元"]
+    subgraph plugs ["转换插头 适配器"]
+        sa["Stripe 适配器 元变分"]
+        pa["PayPal 适配器 元变美元"]
+    end
+    stripe["Stripe SDK charge 分"]
+    paypal["PayPal SDK send_payment 美元"]
+    cashier ==> sa --> stripe
+    cashier ==> pa --> paypal
+    class cashier client
+    class sa,pa extra
+    class stripe,paypal concrete
+    style plugs fill:#FFE0C2,stroke:#EB7500
+```
+
+| 图中角色 | 本仓库示例 |
+|---------|-----------|
+| 收银台 | checkout，只依赖 PaymentProcessor |
+| 转换插头 | StripeAdapter / PayPalAdapter |
+| 异形插座 | StripePayment / PayPalPayment 第三方 SDK |
+
+23 张图的完整图鉴见 [`docs/README.md`](../../docs/README.md#adapter-适配器)。
+
 ## 适用场景
 
 - 想使用一个已经存在的类，但它的接口不符合系统的需要（尤其是无法修改的第三方库）

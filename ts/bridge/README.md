@@ -3,6 +3,48 @@
 ## 意图
 将抽象部分与实现部分分离，使它们可以独立地变化。当一个类存在两个（或更多）独立变化的维度时，用继承会导致类数量爆炸（维度组合），桥接模式改用组合来关联两个维度，各自都可以单独扩展。
 
+<!-- gof-architecture-diagram -->
+## 架构图
+
+> **生活类比**：遥控器和家电是两座岛。基础遥控 / 高级遥控是一座岛，电视 / 收音机是另一座岛。中间一座桥（组合引用）把它们连上，不必为每种组合造一个新类。
+
+```mermaid
+flowchart TB
+    classDef client fill:#C2E5FF,stroke:#007AD2,color:#1E1E1E
+    classDef abs fill:#DCCCFF,stroke:#874FFF,color:#1E1E1E
+    classDef concrete fill:#CDF4D3,stroke:#3E9B4B,color:#1E1E1E
+    classDef extra fill:#FFE0C2,stroke:#EB7500,color:#1E1E1E
+    classDef shared fill:#FFECBD,stroke:#E8A302,color:#1E1E1E
+    classDef hub fill:#C6FAF6,stroke:#5AD8CC,color:#1E1E1E
+    subgraph remotes ["遥控器岛 可独立扩展"]
+        basic["基础遥控"]
+        adv["高级遥控 含静音"]
+        basic --> adv
+    end
+    bridge{{"桥：持有 Device 引用"}}
+    subgraph devices ["家电岛 可独立扩展"]
+        tv["电视 TV"]
+        radio["收音机 Radio"]
+    end
+    basic ==> bridge
+    adv ==> bridge
+    bridge ==> tv
+    bridge ==> radio
+    class basic,adv abs
+    class bridge extra
+    class tv,radio concrete
+    style remotes fill:#DCCCFF,stroke:#874FFF
+    style devices fill:#CDF4D3,stroke:#3E9B4B
+```
+
+| 图中角色 | 本仓库示例 |
+|---------|-----------|
+| 遥控器岛 | RemoteControl / AdvancedRemoteControl 抽象 |
+| 桥 | 抽象持有的 Device 引用 |
+| 家电岛 | TV / Radio 实现 |
+
+23 张图的完整图鉴见 [`docs/README.md`](../../docs/README.md#bridge-桥接)。
+
 ## 适用场景
 - 不希望在抽象和实现之间有固定的绑定关系（如运行时切换设备）。
 - 抽象和实现都应该可以通过子类化独立扩展（遥控器可以有 basic/advanced，设备可以有 TV/Radio，二者独立增长）。

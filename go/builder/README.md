@@ -5,6 +5,44 @@
 将一个复杂对象的构建过程与其表示分离，使同样的构建过程可以创建不同的表示。
 把"分步设置字段"和"最终产品长什么样"解耦，避免构造函数参数爆炸。
 
+<!-- gof-architecture-diagram -->
+## 架构图
+
+> **生活类比**：装机店流水线：指挥者拿「办公机 / 游戏主机 / 工作站」图纸发令，装配师傅一步步装 CPU、内存、硬盘、显卡，最后交出一台电脑。客户也可以绕过图纸自由拼。
+
+```mermaid
+flowchart LR
+    classDef client fill:#C2E5FF,stroke:#007AD2,color:#1E1E1E
+    classDef abs fill:#DCCCFF,stroke:#874FFF,color:#1E1E1E
+    classDef concrete fill:#CDF4D3,stroke:#3E9B4B,color:#1E1E1E
+    classDef extra fill:#FFE0C2,stroke:#EB7500,color:#1E1E1E
+    classDef shared fill:#FFECBD,stroke:#E8A302,color:#1E1E1E
+    classDef hub fill:#C6FAF6,stroke:#5AD8CC,color:#1E1E1E
+    customer["客户"]
+    director["Director 指挥者拿图纸"]
+    builder["ComputerBuilder 装配师傅"]
+    customer -->|"点预设套餐"| director
+    director -->|"按步骤发令"| builder
+    customer -->|"也可以自由拼"| builder
+    builder -->|"set_cpu"| cpu["CPU"]
+    builder -->|"set_memory"| mem["内存"]
+    builder -->|"set_storage"| disk["硬盘"]
+    builder -->|"set_gpu"| gpu["显卡"]
+    builder ==> pc[("Computer 成品")]
+    class customer client
+    class director extra
+    class builder abs
+    class cpu,mem,disk,gpu,pc concrete
+```
+
+| 图中角色 | 本仓库示例 |
+|---------|-----------|
+| 指挥者 | ComputerDirector 预设装配顺序 |
+| 装配师傅 | ComputerBuilder 链式分步接口 |
+| 成品 | Computer |
+
+23 张图的完整图鉴见 [`docs/README.md`](../../docs/README.md#builder-建造者)。
+
 ## 适用场景
 
 - 对象有多个可选/必需部件，构造函数参数过多（"telescoping constructor"问题）

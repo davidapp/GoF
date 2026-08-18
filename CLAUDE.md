@@ -6,6 +6,7 @@
 
 ```
 GoF/
+├── docs/      # 23 张生活类比架构图（语言无关）
 ├── cpp/       # C++ 实现
 ├── go/        # Go 实现
 ├── java/      # Java 实现
@@ -27,6 +28,8 @@ GoF/
 
 - 每个模式在语言目录下有独立子目录（如 `cpp/singleton/`、`python/observer/`）。
 - 每个实现都应包含可运行的示例，演示模式的用法。
+- 每个模式的 README 在「意图」之后嵌入一张生活类比架构图；语言无关的图鉴在 `docs/README.md`。
+- 若需改图，编辑 `scripts/embed_architecture_diagrams.py` 后重新运行该脚本。
 - 使用各语言的惯用风格 — 不要把 Java 式 OOP 强加到 Go 或 Rust 上。
 - 实现保持自包含，尽量不引入外部依赖。
 

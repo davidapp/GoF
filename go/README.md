@@ -3,6 +3,8 @@
 用 Go 惯用风格（接口、组合、函数值/闭包、error 返回值）实现 GoF 23 种设计模式。
 每个模式一个独立子目录，内含可运行示例（`package main` + `main.go`）与中文 README。
 
+每个模式 README 在「意图」之后都有一张形象架构图；23 张图的图鉴见 [`../docs/README.md`](../docs/README.md)。
+
 ## 模式一览
 
 ### 创建型（Creational）

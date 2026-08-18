@@ -3,6 +3,50 @@
 ## 意图
 给定一门语言，定义它的文法的一种表示，并定义一个解释器，该解释器使用该表示来解释语言中的句子。适合定义结构简单、规则固定的小型语言或表达式（如本例的算术表达式）。
 
+<!-- gof-architecture-diagram -->
+## 架构图
+
+> **生活类比**：把「5 + 3 - 2」拆成积木树：加减是组合积木，数字和变量是末端积木。对着变量表走一遍 interpret，树就算出结果。
+
+```mermaid
+flowchart TB
+    classDef client fill:#C2E5FF,stroke:#007AD2,color:#1E1E1E
+    classDef abs fill:#DCCCFF,stroke:#874FFF,color:#1E1E1E
+    classDef concrete fill:#CDF4D3,stroke:#3E9B4B,color:#1E1E1E
+    classDef extra fill:#FFE0C2,stroke:#EB7500,color:#1E1E1E
+    classDef shared fill:#FFECBD,stroke:#E8A302,color:#1E1E1E
+    classDef hub fill:#C6FAF6,stroke:#5AD8CC,color:#1E1E1E
+    src["句子：5 + 3 - 2"]
+    parse["parse 拆成积木树"]
+    src --> parse
+    sub["减法 非终结符"]
+    add["加法 非终结符"]
+    n5["5"]
+    n3["3"]
+    n2["2"]
+    parse --> sub
+    sub --> add
+    sub --> n2
+    add --> n5
+    add --> n3
+    ctx[(Context 变量表)]
+    result["interpret 结果 = 6"]
+    sub ==> result
+    ctx -.-> result
+    class src client
+    class parse,sub,add extra
+    class n5,n3,n2 concrete
+    class ctx,result shared
+```
+
+| 图中角色 | 本仓库示例 |
+|---------|-----------|
+| 句子 | 中缀表达式字符串 |
+| 积木树 | Add / Subtract / Number / Variable |
+| 词典 | Context 变量表 |
+
+23 张图的完整图鉴见 [`docs/README.md`](../../docs/README.md#interpreter-解释器)。
+
 ## 适用场景
 - 需要解释执行的语言的文法比较简单，规则复杂时更适合用专门的语法解析器/编译器生成工具。
 - 一些重复出现的问题可以用一种简单的语言来表达（如权限表达式、正则式子集、算术表达式）。

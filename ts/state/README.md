@@ -3,6 +3,52 @@
 ## 意图
 允许一个对象在其内部状态改变时改变它的行为，从外部看起来该对象仿佛修改了它的类。将每个状态对应的行为封装到独立的状态类中，避免 Context 内部出现大量 `if/switch` 判断当前状态的代码。
 
+<!-- gof-architecture-diagram -->
+## 架构图
+
+> **生活类比**：同一颗暂停键：播放中按下就暂停，停止中按下则无效。播放器没有满屏 if-else，而是把「这个状态下该干什么」交给当前状态对象。
+
+```mermaid
+flowchart TB
+    classDef client fill:#C2E5FF,stroke:#007AD2,color:#1E1E1E
+    classDef abs fill:#DCCCFF,stroke:#874FFF,color:#1E1E1E
+    classDef concrete fill:#CDF4D3,stroke:#3E9B4B,color:#1E1E1E
+    classDef extra fill:#FFE0C2,stroke:#EB7500,color:#1E1E1E
+    classDef shared fill:#FFECBD,stroke:#E8A302,color:#1E1E1E
+    classDef hub fill:#C6FAF6,stroke:#5AD8CC,color:#1E1E1E
+    key[/按下暂停键/]
+    player["AudioPlayer 上下文"]
+    cur{{"当前状态对象"}}
+    key ==> player
+    player ==> cur
+    cur -->|"停止中"| stopped["暂停无效 仍停止"]
+    cur -->|"播放中"| paused["切到暂停态"]
+    cur -->|"已暂停"| playing["切回播放态"]
+    class key,player client
+    class cur abs
+    class stopped extra
+    class paused,playing concrete
+```
+
+```mermaid
+stateDiagram-v2
+    [*] --> Stopped
+    Stopped --> Playing: play
+    Playing --> Paused: pause
+    Paused --> Playing: play
+    Playing --> Stopped: stop
+    Paused --> Stopped: stop
+    Stopped --> Stopped: pause 无效
+```
+
+| 图中角色 | 本仓库示例 |
+|---------|-----------|
+| 播放器 | AudioPlayer 上下文，委托当前状态 |
+| 三态 | Stopped / Playing / Paused |
+| 转换 | 状态对象自己决定下一态 |
+
+23 张图的完整图鉴见 [`docs/README.md`](../../docs/README.md#state-状态)。
+
 ## 适用场景
 - 一个对象的行为取决于它的状态，且必须在运行时根据状态改变行为（如播放器在播放/暂停/停止下对同一操作反应不同）。
 - 代码中包含大量与对象状态相关的条件语句，且这些条件对应对象的各种状态。

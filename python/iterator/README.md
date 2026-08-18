@@ -6,6 +6,42 @@
 Python 将这一模式直接内建为语言协议（`__iter__` / `__next__`），本例既演示
 显式的迭代器类写法，也说明它如何与 `for`、`next()` 等语言设施无缝配合。
 
+<!-- gof-architecture-diagram -->
+## 架构图
+
+> **生活类比**：书架抽屉怎么排，读者看不见。正序书签从左往右滑，倒序书签从右往左滑。两种书签各记各的位置，互不干扰。
+
+```mermaid
+flowchart TB
+    classDef client fill:#C2E5FF,stroke:#007AD2,color:#1E1E1E
+    classDef abs fill:#DCCCFF,stroke:#874FFF,color:#1E1E1E
+    classDef concrete fill:#CDF4D3,stroke:#3E9B4B,color:#1E1E1E
+    classDef extra fill:#FFE0C2,stroke:#EB7500,color:#1E1E1E
+    classDef shared fill:#FFECBD,stroke:#E8A302,color:#1E1E1E
+    classDef hub fill:#C6FAF6,stroke:#5AD8CC,color:#1E1E1E
+    reader["读者 for-in"]
+    shelf["书架 BookCollection 内部列表保密"]
+    fwd["正序书签"]
+    rev["倒序书签"]
+    reader --> shelf
+    shelf --> fwd
+    shelf --> rev
+    fwd --> order1["书1 然后 书2 然后 书3"]
+    rev --> order2["书3 然后 书2 然后 书1"]
+    class reader client
+    class shelf abs
+    class fwd,rev extra
+    class order1,order2 concrete
+```
+
+| 图中角色 | 本仓库示例 |
+|---------|-----------|
+| 书架 | BookCollection，内部列表不外露 |
+| 正序书签 | BookIterator |
+| 倒序书签 | ReverseBookIterator |
+
+23 张图的完整图鉴见 [`docs/README.md`](../../docs/README.md#iterator-迭代器)。
+
 ## 适用场景
 
 - 需要遍历一个聚合对象，但不希望暴露其内部数据结构（列表、树、哈希表等）

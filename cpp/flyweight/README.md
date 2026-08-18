@@ -4,6 +4,44 @@
 
 运用共享技术有效地支持大量细粒度对象的复用。享元模式把对象的状态分为内在状态（可共享）与外在状态（不可共享），只为内在状态创建有限的共享对象。
 
+<!-- gof-architecture-diagram -->
+## 架构图
+
+> **生活类比**：种一片森林：每棵树只要记住自己的坐标，树种、颜色、纹理是共享图纸。一千棵松树只印一张松树图纸，内存不再按棵数爆炸。
+
+```mermaid
+flowchart TB
+    classDef client fill:#C2E5FF,stroke:#007AD2,color:#1E1E1E
+    classDef abs fill:#DCCCFF,stroke:#874FFF,color:#1E1E1E
+    classDef concrete fill:#CDF4D3,stroke:#3E9B4B,color:#1E1E1E
+    classDef extra fill:#FFE0C2,stroke:#EB7500,color:#1E1E1E
+    classDef shared fill:#FFECBD,stroke:#E8A302,color:#1E1E1E
+    classDef hub fill:#C6FAF6,stroke:#5AD8CC,color:#1E1E1E
+    factory["树种工厂 图纸仓库"]
+    pine["松树图纸 绿/粗糙"]
+    oak["橡树图纸 褐/光滑"]
+    factory ==> pine
+    factory ==> oak
+    t1["树 在 10,20"]
+    t2["树 在 30,40"]
+    t3["树 在 50,15"]
+    t4["树 在 70,80"]
+    t1 --> pine
+    t2 --> pine
+    t3 --> oak
+    t4 --> pine
+    class factory,pine,oak shared
+    class t1,t2,t3,t4 concrete
+```
+
+| 图中角色 | 本仓库示例 |
+|---------|-----------|
+| 图纸仓库 | TreeTypeFactory 按键缓存 |
+| 共享图纸 | TreeType 内在状态 |
+| 一棵树 | Tree 只存坐标外在状态 |
+
+23 张图的完整图鉴见 [`docs/README.md`](../../docs/README.md#flyweight-享元)。
+
 ## 适用场景
 
 - 应用需要生成大量相似对象，导致内存开销巨大

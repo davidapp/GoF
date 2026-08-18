@@ -3,6 +3,43 @@
 ## 意图
 将请求封装为一个独立对象，从而可以用不同的请求对客户端进行参数化，并支持将请求排队、记录日志，以及支持撤销操作。
 
+<!-- gof-architecture-diagram -->
+## 架构图
+
+> **生活类比**：遥控器按钮里装的不是电线，是一封命令信封。按下就把信封交给灯去执行；撤销则打开上一封信封做反操作。按钮不用知道灯怎么开。
+
+```mermaid
+flowchart LR
+    classDef client fill:#C2E5FF,stroke:#007AD2,color:#1E1E1E
+    classDef abs fill:#DCCCFF,stroke:#874FFF,color:#1E1E1E
+    classDef concrete fill:#CDF4D3,stroke:#3E9B4B,color:#1E1E1E
+    classDef extra fill:#FFE0C2,stroke:#EB7500,color:#1E1E1E
+    classDef shared fill:#FFECBD,stroke:#E8A302,color:#1E1E1E
+    classDef hub fill:#C6FAF6,stroke:#5AD8CC,color:#1E1E1E
+    finger["手指按下"]
+    remote["遥控器 调用者"]
+    cmd["命令信封 execute / undo"]
+    light["灯 接收者"]
+    hist[(历史栈 可撤销)]
+    finger ==> remote
+    remote ==> cmd
+    cmd -->|"execute"| light
+    remote -->|"按过的信封入栈"| hist
+    hist -->|"undo 拆开上一封"| cmd
+    class finger,remote client
+    class cmd extra
+    class light concrete
+    class hist shared
+```
+
+| 图中角色 | 本仓库示例 |
+|---------|-----------|
+| 遥控器 | RemoteControl 调用者 |
+| 命令信封 | LightOnCommand / LightOffCommand |
+| 灯 | Light 接收者 |
+
+23 张图的完整图鉴见 [`docs/README.md`](../../docs/README.md#command-命令)。
+
 ## 适用场景
 - 需要将"发出请求"和"执行请求"解耦，比如按钮/菜单项只知道触发某个命令，不关心具体怎么实现。
 - 需要支持撤销/重做（undo/redo）。
