@@ -1,4 +1,5 @@
 #import "Flyweight.h"
+#import <dispatch/dispatch.h>
 
 @implementation TreeType
 

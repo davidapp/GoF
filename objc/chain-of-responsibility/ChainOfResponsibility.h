@@ -8,7 +8,7 @@ NS_ASSUME_NONNULL_BEGIN
 @interface Approver : NSObject
 
 @property (nonatomic, copy, readonly) NSString *title;
-@property (nonatomic, strong, nullable) Approver *next;
+@property (nonatomic, strong, nullable, setter=attachNext:) Approver *next;
 
 - (instancetype)initWithTitle:(NSString *)title;
 

@@ -28,7 +28,7 @@ int main(int argc, const char * argv[]) {
         NSLog(@"原始圆形: %@", [originalCircle shapeDescription]);
         NSLog(@"原始矩形: %@", [originalRect shapeDescription]);
 
-        NSLog(@"\n地址验证: original=%p, clone=%p（不同实例）", (void *)originalCircle, (void *)clonedCircle);
+        NSLog(@"\n地址验证: original=%p, clone=%p（不同实例）", (__bridge void *)originalCircle, (__bridge void *)clonedCircle);
     }
     return 0;
 }

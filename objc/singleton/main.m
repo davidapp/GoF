@@ -29,9 +29,9 @@ int main(int argc, const char * argv[]) {
 
         NSLog(@" ");
         NSLog(@"地址验证:");
-        NSLog(@"  main 中的 Logger 地址:        %p", (void *)logger);
-        NSLog(@"  再次 sharedLogger 得到的地址: %p", (void *)again);
-        NSLog(@"  alloc/init 得到的地址:        %p（allocWithZone 被拦截，依然是同一实例）", (void *)viaAlloc);
+        NSLog(@"  main 中的 Logger 地址:        %p", (__bridge void *)logger);
+        NSLog(@"  再次 sharedLogger 得到的地址: %p", (__bridge void *)again);
+        NSLog(@"  alloc/init 得到的地址:        %p（allocWithZone 被拦截，依然是同一实例）", (__bridge void *)viaAlloc);
     }
     return 0;
 }
