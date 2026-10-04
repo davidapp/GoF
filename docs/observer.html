@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>观察者模式 · Observer — GoF 设计模式大白话</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-category="behavioral">
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="index.html">📐 GoF 设计模式 · 大白话图解</a>
+    <nav class="crumbs">
+      <a href="index.html">首页</a><span>/</span>
+      <a href="index.html#behavioral">行为型</a><span>/</span>
+      <span class="current">观察者</span>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <section class="pattern-hero">
+    <span class="badge">行为型</span>
+    <h1>观察者模式 <small>Observer</small></h1>
+    <p class="one-liner">一句话：<strong>一个东西变了，所有盯着它的人会自动收到通知。</strong>它还有个更形象的名字——"发布/订阅"。</p>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="memento.html"><span class="nav-label">← 上一个</span><span class="nav-title">备忘录模式</span></a>
+    <a class="next" href="state.html"><span class="nav-label">下一个 →</span><span class="nav-title">状态模式</span></a>
+  </nav>
+
+  <section class="card">
+    <h2>🌰 生活里的例子</h2>
+    <div class="callout analogy">
+      <p class="callout-title">微信公众号</p>
+      <p>你<strong>关注</strong>了一个公众号，博主发新文章时，所有粉丝都会<strong>自动收到推送</strong>；不感兴趣了随时<strong>取关</strong>，之后就再也收不到消息。</p>
+      <p>注意一个细节：博主根本不认识你，也不知道粉丝都有谁，他只管"发文"这一个动作。但只要他发了，消息就能精准送到每个粉丝手上——因为公众号后台替他记住了"谁订阅了我"这份名单。</p>
+    </div>
+    <p>观察者模式干的就是这件事：<strong>被观察的人只管宣布"我变了"，名单上的人自动收到消息</strong>。双方谁也不认识谁，全靠一份订阅名单联系。</p>
+  </section>
+
+  <section class="card">
+    <h2>😖 没有它会怎样</h2>
+    <p>假设有一个气象站，每分钟采集一次温度。手机 App、路口的电子广告牌、农场的大棚系统都想要这份温度数据。最直接的写法：</p>
+    <div class="callout pain">
+      <p class="callout-title">直来直去的写法（问题代码）</p>
+      <p>气象站每次测到新温度，就直接挨个调用：</p>
+      <p><code>phoneApp.update(temp)</code> → <code>billboard.show(temp)</code> → <code>farmSystem.check(temp)</code> ……</p>
+    </div>
+    <p>这样写眼下能跑，但麻烦在后头：</p>
+    <ul>
+      <li><strong>加一个显示设备，就得改一次气象站的代码</strong>。下个月新来了个"手表 App"？对不起，气象站得重新开膛破肚。</li>
+      <li>气象站被迫认识所有设备，<strong>谁跟谁都缠在一起</strong>，牵一发而动全身。</li>
+      <li>想临时下线某个设备？还是得改气象站。</li>
+    </ul>
+    <p>根子上的问题是<strong>方向反了</strong>：不该是"数据的主人追着喂给所有人"，而应该是"想吃的人自己来订"。</p>
+  </section>
+
+  <section class="card">
+    <h2>👥 角色构成（这个模式由几块拼成）</h2>
+    <table>
+      <thead>
+        <tr><th>角色</th><th>大白话职责</th><th>本仓库示例里是谁</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>主题 Subject</strong>（被观察者）</td>
+          <td>定规矩的人：提供"订阅、退订、广播"三个方法，好比公众号后台。</td>
+          <td><code>WeatherSubject</code> 接口</td>
+        </tr>
+        <tr>
+          <td><strong>具体主题</strong></td>
+          <td>真正持有数据的人。数据一变，就拿起名单挨个打电话。</td>
+          <td><code>WeatherStation</code>（气象站）</td>
+        </tr>
+        <tr>
+          <td><strong>观察者 Observer</strong></td>
+          <td>定一个约定："收到消息后请调你的 <code>update()</code>"。只约定格式，不管你具体干什么。</td>
+          <td><code>WeatherObserver</code> 接口</td>
+        </tr>
+        <tr>
+          <td><strong>具体观察者</strong></td>
+          <td>订阅方。各自决定收到温度后干什么：手机推送、广告牌换字……</td>
+          <td><code>PhoneDisplay</code>、<code>BillboardDisplay</code></td>
+        </tr>
+      </tbody>
+    </table>
+    <p>注意：<strong>气象站只认识"观察者接口"，不认识任何具体设备</strong>。这就是解耦的关键——只要你是观察者（实现了 <code>update</code>），我就通知你，至于你是谁、干什么用的，我一概不问。</p>
+  </section>
+
+  <section class="card">
+    <h2>🗺️ 结构图（谁认识谁、谁调用谁）</h2>
+    <div class="diagram">
+      <div class="dbox key">WeatherStation<small>具体主题 · 拿着订阅名单</small></div>
+      <div class="darrow">通知<br><small>逐个调 update()</small></div>
+      <div class="dstack">
+        <div class="dbox">PhoneDisplay<small>手机 App</small></div>
+        <div class="dbox">BillboardDisplay<small>电子广告牌</small></div>
+      </div>
+    </div>
+    <p class="dcaption">箭头方向 = 调用方向：只有主题调用观察者；反过来，观察者只在进门时调用一次 subscribe()。</p>
+  </section>
+
+  <section class="card">
+    <h2>🔄 运转步骤（跑一遍完整流程）</h2>
+    <ol class="steps">
+      <li><strong>订阅</strong>：手机 App 调用 <code>station.subscribe(自己)</code>，气象站把它记进名单。</li>
+      <li><strong>再订阅</strong>：广告牌、农场系统也先后来订阅，名单越来越长。</li>
+      <li><strong>数据变了</strong>：气象站测到新温度 26.5°C。</li>
+      <li><strong>广播</strong>：气象站遍历名单，挨个调用 <code>update(26.5)</code>——每个设备用自己的方式展示。</li>
+      <li><strong>退订</strong>：广告牌下班了，调用 <code>unsubscribe(自己)</code>，从此收不到通知，气象站毫发无损。</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>🔍 代码走读</h2>
+    <p>下面是本仓库 TypeScript 实现的骨架（完整版见 <a href="../ts/observer/main.ts">ts/observer/main.ts</a>，有删减）：</p>
+    <div class="code-header">ts/observer/main.ts（简化）</div>
+    <pre><code>// 观察者接口：只约定"收到消息怎么办"
+interface WeatherObserver {
+  update(temperature: number, humidity: number): void;
+}
+
+// 具体主题：拿着名单，数据一变就广播
+class WeatherStation {
+  private readonly observers: WeatherObserver[] = [];  // 订阅名单
+
+  subscribe(o: WeatherObserver): void { this.observers.push(o); }   // ① 进名单
+
+  unsubscribe(o: WeatherObserver): void {                            // ⑤ 出名单
+    const i = this.observers.indexOf(o);
+    if (i !== -1) this.observers.splice(i, 1);
+  }
+
+  private notify(): void {                                           // ④ 广播
+    for (const o of this.observers) o.update(this.temperature, this.humidity);
+  }
+
+  // ③ 数据一变，顺手广播
+  setMeasurements(t: number, h: number): void {
+    this.temperature = t;
+    this.humidity = h;
+    this.notify();
+  }
+}
+
+// 具体观察者：收到消息后自己决定干什么
+class PhoneDisplay implements WeatherObserver {
+  update(temperature: number): void {
+    console.log(`[手机] 推送：现在 ${temperature}°C`);
+  }
+}</code></pre>
+    <div class="callout tip">
+      <p class="callout-title">看懂这段代码，就看懂了整个模式</p>
+      <p>整个模式的核心其实就三行：<strong>一个数组（名单）+ 订阅时 push + 通知时遍历调用</strong>。剩下的都是把这三行包装得更安全、更好维护。</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚖️ 什么时候用，什么时候别用</h2>
+    <div class="two-col">
+      <div>
+        <h3>✅ 适合的场景</h3>
+        <ul class="checklist good">
+          <li>一个东西变了，<strong>多个地方都要跟着动</strong>，而且"哪些地方"经常增减</li>
+          <li>事件系统：按钮点击、消息到达、数据更新……框架里到处都是它</li>
+          <li>不想让数据的主人认识所有使用方（解耦）</li>
+        </ul>
+      </div>
+      <div>
+        <h3>❌ 不适合的场景</h3>
+        <ul class="checklist bad">
+          <li>联动对象只有一两个且固定不变——直接调用反而更清楚</li>
+          <li>各观察者之间有严格的先后顺序——通知顺序没有保证，会埋雷</li>
+          <li>需要"一问一答"式交互——那是请求响应，不是广播</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚠️ 容易踩的坑</h2>
+    <ul class="pitfalls">
+      <li><strong>忘了退订 → 内存泄漏</strong>。名单一直攥着观察者不放，对象永远删不掉。页面/组件销毁时记得 <code>unsubscribe</code>。</li>
+      <li><strong>观察者在 update 里反过来改主题 → 死循环</strong>。A 通知 B，B 又改 A，A 再通知 B……栈直接爆掉。</li>
+      <li><strong>通知是同步串行的</strong>。名单里有个观察者干活特别慢，数据主人就得干等它——慢的应该丢到队列里异步处理。</li>
+      <li><strong>广播之后不知道谁干了什么</strong>。排查问题时记日志：通知了谁、谁报错了。</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>🔗 和其他模式的关系</h2>
+    <ul>
+      <li>和<strong><a href="mediator.html">中介者模式</a></strong>最容易混：<strong>观察者是"一个喇叭对多头广播"，单向的</strong>；中介者是"一群人互相聊天，全通过中间人"，多向的。</li>
+      <li>主题有时被做成<strong><a href="singleton.html">单例</a></strong>（比如全局的事件总线），保证大家订阅的是同一个名单。</li>
+      <li>观察者本身常用<strong><a href="strategy.html">策略模式</a></strong>的思路实现——"收到消息后怎么办"就是可替换的策略。</li>
+    </ul>
+  </section>
+
+  <div class="remember">
+    <span class="remember-label">一 句 话 记 住 它</span>
+    <strong>订阅它，它变了就自动喊你；取关了，它就当你不存在。</strong>
+  </div>
+
+  <section class="card">
+    <h2>📦 本仓库 9 种语言实现</h2>
+    <p>同一个气象站例子，用 9 种语言各写了一遍，挑一个你顺手的对照着看：</p>
+    <div class="lang-links">
+      <a class="pill" href="../cpp/observer/README.md">C++</a>
+      <a class="pill" href="../go/observer/README.md">Go</a>
+      <a class="pill" href="../java/observer/README.md">Java</a>
+      <a class="pill" href="../js/observer/README.md">JavaScript</a>
+      <a class="pill" href="../objc/observer/README.md">Objective-C</a>
+      <a class="pill" href="../python/observer/README.md">Python</a>
+      <a class="pill" href="../rust/observer/README.md">Rust</a>
+      <a class="pill" href="../swift/observer/README.md">Swift</a>
+      <a class="pill" href="../ts/observer/README.md">TypeScript</a>
+    </div>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="memento.html"><span class="nav-label">← 上一个</span><span class="nav-title">备忘录模式</span></a>
+    <a class="next" href="state.html"><span class="nav-label">下一个 →</span><span class="nav-title">状态模式</span></a>
+  </nav>
+
+</main>
+
+<footer class="site-footer">
+  <p>GoF 设计模式 · 大白话图解 —— 配套 <a href="../README.md">GoF 多语言实现仓库</a>（9 种语言 × 23 个模式）</p>
+</footer>
+
+</body>
+</html>

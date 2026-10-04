@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>建造者模式 · Builder — GoF 设计模式大白话</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-category="creational">
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="index.html">📐 GoF 设计模式 · 大白话图解</a>
+    <nav class="crumbs">
+      <a href="index.html">首页</a><span>/</span>
+      <a href="index.html#creational">创建型</a><span>/</span>
+      <span class="current">建造者</span>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <section class="pattern-hero">
+    <span class="badge">创建型</span>
+    <h1>建造者模式 <small>Builder</small></h1>
+    <p class="one-liner">一句话：<strong>把"一口气传一堆参数"变成"一步一步设"，最后 build() 一下拿成品。</strong></p>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="abstract-factory.html"><span class="nav-label">← 上一个</span><span class="nav-title">抽象工厂模式</span></a>
+    <a class="next" href="factory-method.html"><span class="nav-label">下一个 →</span><span class="nav-title">工厂方法模式</span></a>
+  </nav>
+
+  <section class="card">
+    <h2>🌰 生活里的例子</h2>
+    <div class="callout analogy">
+      <p class="callout-title">奶茶店点单</p>
+      <p>店员不会让你一口气背出"中杯茉莉奶绿三分糖去冰加珍珠加椰果"，而是<strong>一步一步问你</strong>：杯型？茶底？甜度？冰量？加料？你答一步她做一步，最后封口，递给你一杯完整的奶茶。</p>
+      <p>嫌麻烦？直接说<strong>"来杯店长推荐"</strong>——店员照着官方配方唰唰做完，你一步都不用操心。</p>
+    </div>
+    <p>对应到模式里：<strong>奶茶是产品</strong>（Computer），<strong>每个问题是 builder 的一个 set 方法</strong>（setCpu、setRam），<strong>封口出货是 build()</strong>，<strong>"店长推荐"就是指挥者 Director 的预设方法</strong>（buildOfficePC）。想按官方配方来就找 Director，想自由发挥就自己一步步 set。</p>
+  </section>
+
+  <section class="card">
+    <h2>😖 没有它会怎样</h2>
+    <p>本仓库的示例是<strong>攒电脑</strong>：CPU、内存、存储、显卡，四大件各有讲究。最直接的写法是一个巨大的构造函数：</p>
+    <div class="callout pain">
+      <p class="callout-title">直来直去的写法（问题代码）</p>
+      <p><code>new Computer("Intel i9", "32GB", "2TB NVMe SSD", "RTX 4090")</code></p>
+      <p>现在才 4 个参数。想象字段涨到十几个，其中一半还是可选的呢？</p>
+    </div>
+    <p>这样写的麻烦：</p>
+    <ul>
+      <li><strong>调用处全是裸字符串</strong>：看代码的人根本不知道第 3 个参数是存储还是显卡，传错位置编译器也不吭声。</li>
+      <li><strong>可选参数只能拿 <code>undefined</code> 占位</strong>：只想设显卡？对不起，前面几个先填一串空。</li>
+      <li><strong>"办公配置"这种常用套餐被抄了 N 遍</strong>：每个调用处都重新抄一遍参数，想统一改配置？满项目找。</li>
+      <li><strong>没法分步校验</strong>：比如"选了顶配显卡才允许上大电源"这种规则，塞一个构造函数里写起来很难受。</li>
+    </ul>
+    <p>根子上的问题是<strong>"怎么填字段"和"填哪些值"被焊死在一次调用里</strong>，拆开来才好收拾。</p>
+  </section>
+
+  <section class="card">
+    <h2>👥 角色构成（这个模式由几块拼成）</h2>
+    <table>
+      <thead>
+        <tr><th>角色</th><th>大白话职责</th><th>本仓库示例里是谁</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>产品 Product</strong></td>
+          <td>最终要攒出来的复杂家伙。</td>
+          <td><code>Computer</code></td>
+        </tr>
+        <tr>
+          <td><strong>建造者接口 Builder</strong></td>
+          <td>把"攒货的每一步"都列成一个方法，最后加一个出货方法。</td>
+          <td><code>IComputerBuilder</code> 接口</td>
+        </tr>
+        <tr>
+          <td><strong>具体建造者</strong></td>
+          <td>真正动手攒；每个 set 方法都 <code>return this</code>，所以能一路"点"下去（链式调用）。</td>
+          <td><code>ComputerBuilder</code></td>
+        </tr>
+        <tr>
+          <td><strong>指挥者 Director</strong></td>
+          <td>记配方的人：把"常见套餐"封装成一个方法，照方抓药。</td>
+          <td><code>ComputerDirector</code>（<code>buildOfficePC()</code>、<code>buildGamingPC()</code>）</td>
+        </tr>
+        <tr>
+          <td><strong>客户端</strong></td>
+          <td>顾客：点套餐找 Director，自由发挥直接找 Builder。</td>
+          <td><code>main()</code> 里的调用代码</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>解耦关键：<strong>"字段怎么填"（Builder 的 set 方法）、"按什么配方填"（Director）、"填成个啥"（Computer）三件事被拆开了</strong>。换个配方不用动 Builder，换个攒法不用动产品，各改各的互不牵连。</p>
+  </section>
+
+  <section class="card">
+    <h2>🗺️ 结构图（谁认识谁、谁调用谁）</h2>
+    <div class="diagram">
+      <div class="dbox key">ComputerDirector<small>指挥者 · 记配方、喊步骤</small></div>
+      <div class="darrow">按顺序调<br>setCpu → setRam → …<br><small>喊一步做一步</small></div>
+      <div class="dbox">ComputerBuilder<small>建造者 · 动手攒机器</small></div>
+      <div class="darrow">build()<br><small>封口出货</small></div>
+      <div class="dbox">Computer<small>产品 · 攒好的整机</small></div>
+    </div>
+    <p class="dcaption">箭头方向 = 调用方向：客户端站在最左端——走套餐就经过 Director，自由配就绕过它直接指挥 Builder；两条路最后都从 build() 拿货。</p>
+  </section>
+
+  <section class="card">
+    <h2>🔄 运转步骤（跑一遍完整流程）</h2>
+    <ol class="steps">
+      <li><strong>备料</strong>：<code>new ComputerBuilder()</code>，会攒电脑的师傅就位，内部先备好一台空 <code>Computer</code>。</li>
+      <li><strong>请指挥者</strong>（可选）：<code>new ComputerDirector(builder)</code>，把师傅交给记配方的人。</li>
+      <li><strong>点套餐</strong>：调 <code>director.buildGamingPC()</code>，它按配方依次 <code>setCpu("Intel i9")</code>、<code>setRam("32GB")</code>……</li>
+      <li><strong>链式设置</strong>：每个 set 方法最后都 <code>return this</code>，所以能写成 <code>builder.setCpu(…).setRam(…).setStorage(…)</code> 一条链。</li>
+      <li><strong>出货</strong>：调 <code>build()</code>，把攒好的 <code>Computer</code> 交出来；builder 顺手把内部状态重置，下次再用不串台。</li>
+      <li><strong>自由发挥</strong>：不想点套餐？跳过 Director，自己对着 builder 一路 set，最后 <code>build()</code>，怎么配随你。</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>🔍 代码走读</h2>
+    <p>下面是本仓库 TypeScript 实现的骨架（完整版见 <a href="../ts/builder/main.ts">ts/builder/main.ts</a>，有删减）：</p>
+    <div class="code-header">ts/builder/main.ts（简化）</div>
+    <pre><code>// 产品：最终要攒出来的家伙
+class Computer {
+  cpu = "未指定";
+  ram = "未指定";
+  storage = "未指定";
+  gpu?: string;   // 可选：不装独显
+}
+
+// 建造者：每个 set 都 return this，才能链式一路点下去
+class ComputerBuilder implements IComputerBuilder {
+  private computer = new Computer();
+
+  setCpu(cpu: string): this { this.computer.cpu = cpu; return this; }
+  setRam(ram: string): this { this.computer.ram = ram; return this; }
+  setStorage(s: string): this { this.computer.storage = s; return this; }
+  setGpu(gpu: string): this { this.computer.gpu = gpu; return this; }
+
+  build(): Computer {
+    const result = this.computer;
+    this.computer = new Computer();  // 重置，避免下次构建被污染
+    return result;
+  }
+}
+
+// 指挥者：把常见套餐封装成一个方法
+class ComputerDirector {
+  constructor(private readonly builder: IComputerBuilder) {}
+
+  buildGamingPC(): Computer {
+    return this.builder
+      .setCpu("Intel i9")
+      .setRam("32GB")
+      .setStorage("2TB NVMe SSD")
+      .setGpu("NVIDIA RTX 4090")
+      .build();                     // 最后一步：出货
+  }
+}</code></pre>
+    <div class="callout tip">
+      <p class="callout-title">看懂这段代码，就看懂了整个模式</p>
+      <p>建造者的魂就两样：<strong>一堆返回 this 的 set 方法（链式）+ 一个 build() 出货</strong>。Director 只是可选配件——它把"常用配方"背下来了而已，本仓库特意演示了绕开它自由配的那条路。</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚖️ 什么时候用，什么时候别用</h2>
+    <div class="two-col">
+      <div>
+        <h3>✅ 适合的场景</h3>
+        <ul class="checklist good">
+          <li>构造参数多、可选参数多，构造函数已经变成"望远镜"（参数一个套一个越传越长）</li>
+          <li>同一套攒法要产出多种成品（办公机 / 游戏机 / 服务器）</li>
+          <li>构造过程要<strong>分步进行、分步校验</strong>，或者要复用"标准配方"</li>
+        </ul>
+      </div>
+      <div>
+        <h3>❌ 不适合的场景</h3>
+        <ul class="checklist bad">
+          <li>字段就两三个——直接构造函数，三行搞定的事别写三十行</li>
+          <li>对象简单、字段固定必填——一个 new 就是最优解</li>
+          <li>只是想复制一份现成的对象——那是原型模式的活儿</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚠️ 容易踩的坑</h2>
+    <ul class="pitfalls">
+      <li><strong>忘了调 build()</strong>。光链式 set 了半天，拿到的其实是 builder 自己而不是产品，一用类型就对不上。链式写得太顺，这个错特别容易犯。</li>
+      <li><strong>复用 builder 忘了重置</strong>。本仓库的 <code>build()</code> 里特意换了个新 <code>Computer</code>；自己实现时漏掉这步，第二次攒的机器会带上一次的残留零件。</li>
+      <li><strong>链式调用不保证顺序</strong>。有的步骤有先后依赖（先装主板再插显卡），链式写法一句报错都没有，全靠调用者自觉。</li>
+      <li><strong>简单对象硬上建造者</strong>。三个字段的小类套上四层结构，属于为模式而模式，读代码的人反而更累。</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>🔗 和其他模式的关系</h2>
+    <ul>
+      <li>和<strong><a href="factory-method.html">工厂方法模式</a></strong>分工明确：工厂是"一步到位给成品"，建造者是"分好几步攒成品"。要标准品找工厂，要精细定制找建造者。</li>
+      <li>攒到一半的配置想"存个底稿以后复印"？把当前成品当原型克隆一份，就轮到<strong><a href="prototype.html">原型模式</a></strong>出场。</li>
+      <li>可以和<strong><a href="abstract-factory.html">抽象工厂模式</a></strong>合体：工厂负责选"哪家厂的套件"，建造者负责"怎么一步步装起来"。</li>
+    </ul>
+  </section>
+
+  <div class="remember">
+    <span class="remember-label">一 句 话 记 住 它</span>
+    <strong>一步一步设，build() 出成品；懒人直接点套餐（Director）。</strong>
+  </div>
+
+  <section class="card">
+    <h2>📦 本仓库 9 种语言实现</h2>
+    <p>同一个攒电脑的例子，用 9 种语言各写了一遍，挑一个你顺手的对照着看：</p>
+    <div class="lang-links">
+      <a class="pill" href="../cpp/builder/README.md">C++</a>
+      <a class="pill" href="../go/builder/README.md">Go</a>
+      <a class="pill" href="../java/builder/README.md">Java</a>
+      <a class="pill" href="../js/builder/README.md">JavaScript</a>
+      <a class="pill" href="../objc/builder/README.md">Objective-C</a>
+      <a class="pill" href="../python/builder/README.md">Python</a>
+      <a class="pill" href="../rust/builder/README.md">Rust</a>
+      <a class="pill" href="../swift/builder/README.md">Swift</a>
+      <a class="pill" href="../ts/builder/README.md">TypeScript</a>
+    </div>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="abstract-factory.html"><span class="nav-label">← 上一个</span><span class="nav-title">抽象工厂模式</span></a>
+    <a class="next" href="factory-method.html"><span class="nav-label">下一个 →</span><span class="nav-title">工厂方法模式</span></a>
+  </nav>
+
+</main>
+
+<footer class="site-footer">
+  <p>GoF 设计模式 · 大白话图解 —— 配套 <a href="../README.md">GoF 多语言实现仓库</a>（9 种语言 × 23 个模式）</p>
+</footer>
+
+</body>
+</html>

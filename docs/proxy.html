@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>代理模式 · Proxy — GoF 设计模式大白话</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-category="structural">
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="index.html">📐 GoF 设计模式 · 大白话图解</a>
+    <nav class="crumbs">
+      <a href="index.html">首页</a><span>/</span>
+      <a href="index.html#structural">结构型</a><span>/</span>
+      <span class="current">代理</span>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <section class="pattern-hero">
+    <span class="badge">结构型</span>
+    <h1>代理模式 <small>Proxy</small></h1>
+    <p class="one-liner">一句话：<strong>派个替身挡在真家伙前面：该拦的拦、该缓的缓，正主最后才登场。</strong></p>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="flyweight.html"><span class="nav-label">← 上一个</span><span class="nav-title">享元模式</span></a>
+    <a class="next" href="chain-of-responsibility.html"><span class="nav-label">下一个 →</span><span class="nav-title">责任链模式</span></a>
+  </nav>
+
+  <section class="card">
+    <h2>🌰 生活里的例子</h2>
+    <div class="callout analogy">
+      <p class="callout-title">明星的经纪人</p>
+      <p>想请明星商演，你不能直接冲到明星本人跟前谈。先过经纪人这一关：<strong>他先看你资质（权限校验）、查明星档期（控制访问）、谈不拢直接把你的邀约挡回去</strong>；谈拢了，才安排明星本人登台。</p>
+      <p>注意两个细节：<strong>对外谈的都叫"商演"，流程一样</strong>——你从头到尾面对的都是经纪人，甚至感觉不到明星什么时候进的场；<strong>经纪人自己不唱歌</strong>，他只管"放不放行、何时放行"，唱还是明星唱。</p>
+    </div>
+    <p>对应到模式里：<strong>经纪人是代理，明星是真实对象，"商演流程"是两人共同的接口</strong>。替身控制访问的时机和资格，正主只管干正事。</p>
+  </section>
+
+  <section class="card">
+    <h2>😖 没有它会怎样</h2>
+    <p>本仓库的例子是相册应用：相册里躺着一堆图片，<code>RealImage</code> 一构造就会真的去读磁盘（高开销操作）。如果不用代理，打开相册就：</p>
+    <div class="callout pain">
+      <p class="callout-title">直来直去的写法（问题代码）</p>
+      <p>一上来就把真家伙全造出来：</p>
+      <p><code>const gallery = [new RealImage("p1.jpg"), new RealImage("p2.jpg"), …… new RealImage("p100.jpg")]</code> —— 100 次磁盘 I/O 在这一行全部发生。</p>
+    </div>
+    <p>这样写眼下能跑，但麻烦在后头：</p>
+    <ul>
+      <li><strong>用户可能只看第一张</strong>，剩下 99 张的加载全是白等，启动慢得像爬。</li>
+      <li><strong>100 张图的内存全部占住</strong>，哪怕用户压根没往下翻。</li>
+      <li>想在加载前后加缓存、加权限、加日志？<strong>只能改 <code>RealImage</code> 本尊或改所有调用方</strong>，两处都是雷区。</li>
+    </ul>
+    <p>根子上的问题是：<strong>"又贵又不一定用"的东西不该急着造</strong>，中间缺一个替你把关、垫后的人。</p>
+  </section>
+
+  <section class="card">
+    <h2>👥 角色构成（这个模式由几块拼成）</h2>
+    <table>
+      <thead>
+        <tr><th>角色</th><th>大白话职责</th><th>本仓库示例里是谁</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>抽象主题 Subject</strong></td>
+          <td>共同身份：定下"是张图片就得会 <code>display()</code>"——代理和真家伙都长这张脸，才能互相顶替。</td>
+          <td><code>Image</code> 接口</td>
+        </tr>
+        <tr>
+          <td><strong>真实主题</strong></td>
+          <td>正主：干重活的那位——构造函数里就真的去读磁盘。</td>
+          <td><code>RealImage</code>（构造即 <code>loadFromDisk()</code>）</td>
+        </tr>
+        <tr>
+          <td><strong>代理 Proxy</strong></td>
+          <td>替身：构造零成本，揣着文件名按兵不动；第一次 <code>display()</code> 才请出正主并记住，之后直接转发。</td>
+          <td><code>ImageProxy</code>（懒加载 + 缓存）</td>
+        </tr>
+        <tr>
+          <td><strong>客户端</strong></td>
+          <td>看相册的人：手里攥着 <code>Image[]</code>，不知道也不关心里面装的是替身还是正主。</td>
+          <td><code>gallery: Image[]</code></td>
+        </tr>
+      </tbody>
+    </table>
+    <p>解耦（把缠在一起的代码拆开，互不认识也能合作）关键在：<strong>代理和真实对象实现同一个 <code>Image</code> 接口</strong>，所以"懒加载、缓存、权限"这些附加逻辑塞进代理后，<strong>客户端一行代码都不用改</strong>——它以为自己在调图片，其实在跟经纪人说话。</p>
+  </section>
+
+  <section class="card">
+    <h2>🗺️ 结构图（谁认识谁、谁调用谁）</h2>
+    <div class="diagram">
+      <div class="dbox">gallery<small>客户端 · 拿到的是 Image</small></div>
+      <div class="darrow">调用<br><small>display()</small></div>
+      <div class="dbox key">ImageProxy<small>代理 · 先挡一道</small></div>
+      <div class="darrow">首次才创建并转发<br><small>之后直接复用缓存</small></div>
+      <div class="dbox">RealImage<small>真实主题 · 真读磁盘</small></div>
+    </div>
+    <p class="dcaption">箭头方向 = 调用方向：只有代理调真实对象；真实对象从不回头找代理。两者都实现 <code>Image</code>，所以在客户端眼里可以无感互换。</p>
+  </section>
+
+  <section class="card">
+    <h2>🔄 运转步骤（跑一遍完整流程）</h2>
+    <ol class="steps">
+      <li><strong>建相册</strong>：<code>gallery</code> 里放三个 <code>new ImageProxy("photoN.jpg")</code>——注意，此刻<strong>零磁盘 I/O</strong>，替身只揣了个文件名。</li>
+      <li><strong>首次查看</strong>：用户翻到第一张，调 <code>gallery[0].display()</code>，请求先落在代理手里。</li>
+      <li><strong>请正主</strong>：代理一看 <code>realImage</code> 还是空的——<code>new RealImage(filename)</code>，这一刻磁盘才真正转起来。</li>
+      <li><strong>转发</strong>：代理接着调 <code>realImage.display()</code>，图片显示，用户毫无察觉。</li>
+      <li><strong>再看白拿</strong>：用户翻回第一张再看，代理发现正主已就位，直接转发，<strong>不再加载</strong>。</li>
+      <li><strong>换图再走一遍</strong>：翻到 <code>photo2</code>，首次访问，代理再请一次正主——每张图都只在自己被看时才花这份钱。</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>🔍 代码走读</h2>
+    <p>下面是本仓库 TypeScript 实现的骨架（完整版见 <a href="../ts/proxy/main.ts">ts/proxy/main.ts</a>，有删减）：</p>
+    <div class="code-header">ts/proxy/main.ts（简化）</div>
+    <pre><code>// 抽象主题：代理和真家伙的共同身份
+interface Image {
+  display(): void;
+}
+
+// 真实主题：一构造就真的去读磁盘（贵！）
+class RealImage implements Image {
+  constructor(private readonly filename: string) {
+    this.loadFromDisk(); // 磁盘 I/O 发生在构造这一刻
+  }
+  private loadFromDisk(): void {
+    console.log(`  [磁盘 I/O] 正在从磁盘加载图片: ${this.filename}`);
+  }
+  display(): void { console.log(`显示图片: ${this.filename}`); }
+}
+
+// 代理：构造时啥也不干，第一次 display 才请出正主
+class ImageProxy implements Image {
+  private realImage: RealImage | undefined; // 缓存正主
+
+  constructor(private readonly filename: string) {}
+
+  display(): void {
+    if (this.realImage === undefined) {
+      this.realImage = new RealImage(this.filename); // 首次：真正加载
+    }
+    this.realImage.display(); // 之后：直接转发
+  }
+}
+
+// 客户端：gallery 里全是代理，创建时零磁盘 I/O
+const gallery: Image[] = [
+  new ImageProxy("photo1.jpg"),
+  new ImageProxy("photo2.jpg"),
+];
+gallery[0]?.display(); // 这一刻，photo1 才真正加载</code></pre>
+    <div class="callout tip">
+      <p class="callout-title">看懂这段代码，就看懂了整个模式</p>
+      <p>核心就一个 <code>if</code>：<strong>"正主在场吗？不在才请，在就直接用"</strong>。把创建的时机从"构造时"拖到"第一次真正使用时"，懒加载、缓存这些附加控制就全藏在这个 if 里了。</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚖️ 什么时候用，什么时候别用</h2>
+    <div class="two-col">
+      <div>
+        <h3>✅ 适合的场景</h3>
+        <ul class="checklist good">
+          <li>对象<strong>创建很贵</strong>（读盘、拉网络、大量计算），而且不一定每次都用——懒加载最划算</li>
+          <li>要<strong>控制访问资格</strong>：没登录不给看、没权限不给调</li>
+          <li>想加缓存、日志、计数这些附加逻辑，<strong>又不想动原类和调用方</strong></li>
+        </ul>
+      </div>
+      <div>
+        <h3>❌ 不适合的场景</h3>
+        <ul class="checklist bad">
+          <li>对象创建很便宜——套层代理纯属多过一道手，还添乱</li>
+          <li>马上就要用真实对象的完整状态，"延迟"毫无意义</li>
+          <li>附加逻辑复杂到喧宾夺主（一堆鉴权+重试+限流）——那该是独立的服务层，不是替身</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚠️ 容易踩的坑</h2>
+    <ul class="pitfalls">
+      <li><strong>代理和正主状态不同步</strong>。正主在别处被改了、甚至释放了，代理还攥着旧引用傻乐——共享同一份生命周期管理很关键。</li>
+      <li><strong>代理里塞太多逻辑</strong>。鉴权、缓存、重试、日志全堆进 <code>display()</code>，出问题时排查两眼一黑——替身该薄，厚了就是设计坏了。</li>
+      <li><strong>缓存形同虚设</strong>。缓存的 key 选错（比如按"文件名+时间戳"），或者压根没缓存住正主，每次访问都穿透，代理就成了纯过路费。</li>
+      <li><strong>忘了处理正主的失败</strong>。懒加载那一瞬间才暴露真实错误（文件不存在、网络超时），客户端没准备好的话，bug 会在"第一次调用"时才炸出来。</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>🔗 和其他模式的关系</h2>
+    <ul>
+      <li>和<strong><a href="decorator.html">装饰器模式</a></strong>是结构双胞胎：都是"同接口 + 持引用 + 转发"。区别在意图——<strong>代理管"能不能访问、何时访问"，通常一层，客户端不知情；装饰器管"往上叠加职责"，可以多层，客户端主动去拼</strong>。</li>
+      <li>和<strong><a href="adapter.html">适配器模式</a></strong>都包一层：代理不换接口，只控制访问；适配器专门改接口的形状。</li>
+      <li>和<strong><a href="facade.html">外观模式</a></strong>都算"中间人"：代理是替身，一对一顶替；外观是总开关，一对多简化。</li>
+    </ul>
+  </section>
+
+  <div class="remember">
+    <span class="remember-label">一 句 话 记 住 它</span>
+    <strong>先派替身挡前面：该拦的拦、该缓的缓，正主最后才登场。</strong>
+  </div>
+
+  <section class="card">
+    <h2>📦 本仓库 9 种语言实现</h2>
+    <p>同一个图片懒加载替身的例子，用 9 种语言各写了一遍，挑一个你顺手的对照着看：</p>
+    <div class="lang-links">
+      <a class="pill" href="../cpp/proxy/README.md">C++</a>
+      <a class="pill" href="../go/proxy/README.md">Go</a>
+      <a class="pill" href="../java/proxy/README.md">Java</a>
+      <a class="pill" href="../js/proxy/README.md">JavaScript</a>
+      <a class="pill" href="../objc/proxy/README.md">Objective-C</a>
+      <a class="pill" href="../python/proxy/README.md">Python</a>
+      <a class="pill" href="../rust/proxy/README.md">Rust</a>
+      <a class="pill" href="../swift/proxy/README.md">Swift</a>
+      <a class="pill" href="../ts/proxy/README.md">TypeScript</a>
+    </div>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="flyweight.html"><span class="nav-label">← 上一个</span><span class="nav-title">享元模式</span></a>
+    <a class="next" href="chain-of-responsibility.html"><span class="nav-label">下一个 →</span><span class="nav-title">责任链模式</span></a>
+  </nav>
+
+</main>
+
+<footer class="site-footer">
+  <p>GoF 设计模式 · 大白话图解 —— 配套 <a href="../README.md">GoF 多语言实现仓库</a>（9 种语言 × 23 个模式）</p>
+</footer>
+
+</body>
+</html>

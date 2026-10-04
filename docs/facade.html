@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>外观模式 · Facade — GoF 设计模式大白话</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-category="structural">
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="index.html">📐 GoF 设计模式 · 大白话图解</a>
+    <nav class="crumbs">
+      <a href="index.html">首页</a><span>/</span>
+      <a href="index.html#structural">结构型</a><span>/</span>
+      <span class="current">外观</span>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <section class="pattern-hero">
+    <span class="badge">结构型</span>
+    <h1>外观模式 <small>Facade</small></h1>
+    <p class="one-liner">一句话：<strong>给一堆复杂操作装个总开关：你只按一下，它替你把里里外外按顺序全办妥。</strong></p>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="decorator.html"><span class="nav-label">← 上一个</span><span class="nav-title">装饰器模式</span></a>
+    <a class="next" href="flyweight.html"><span class="nav-label">下一个 →</span><span class="nav-title">享元模式</span></a>
+  </nav>
+
+  <section class="card">
+    <h2>🌰 生活里的例子</h2>
+    <div class="callout analogy">
+      <p class="callout-title">餐厅的服务员</p>
+      <p>下馆子你只跟服务员说一句"来份 158 的双人套餐"，后厨立马忙起来：凉菜间切碟、热菜间颠勺、主食间蒸饭、按先凉后热的顺序上桌——<strong>这整套流程你一样都不用管</strong>，也不用进后厨指挥任何一个师傅。</p>
+      <p>注意：服务员并没有替后厨做菜，师傅们的手艺一样没少；她只是<strong>把"点一套菜"翻译成"后厨的一串协作"</strong>，并记住了出菜顺序这个门道。</p>
+    </div>
+    <p>对应到模式里：<strong>顾客是客户端，服务员是外观，后厨各岗位是子系统，"点套餐"就是外观对外的那个简单方法</strong>。复杂度没消失，只是被收进了服务员的脑子里。</p>
+  </section>
+
+  <section class="card">
+    <h2>😖 没有它会怎样</h2>
+    <p>本仓库的例子是家庭影院：想看个电影，背后是投影仪、功放、灯光、播放器四个设备，各有各的遥控器。没有外观时，每次看电影都得手动来一遍：</p>
+    <div class="callout pain">
+      <p class="callout-title">直来直去的写法（问题代码）</p>
+      <p>客户端亲自指挥四个设备，顺序还得背对：</p>
+      <p><code>lights.dim(20)</code> → <code>projector.turnOn()</code> → <code>projector.setInput("HDMI-Streaming")</code> → <code>amplifier.turnOn()</code> → <code>amplifier.setVolume(15)</code> → <code>player.play(movie)</code> ……</p>
+    </div>
+    <p>这样写眼下能跑，但麻烦在后头：</p>
+    <ul>
+      <li><strong>六步顺序一步不能错</strong>（投影没开就切输入源，白切），来个朋友想看电影，你得先教他半小时。</li>
+      <li><strong>想再写个"结束观影"，又得反着背一遍</strong>：停播、关功放、关投影、灯亮——抄一遍就多一处会写错的地方。</li>
+      <li><strong>客户端被迫成为四个设备的操作专家</strong>，设备一升级（接口改名），所有看电影的代码全得跟着改。</li>
+    </ul>
+    <p>根子上的问题是：<strong>"先做什么后做什么"这种门道，散落在每个调用方手里</strong>，而不是被收在一个地方。</p>
+  </section>
+
+  <section class="card">
+    <h2>👥 角色构成（这个模式由几块拼成）</h2>
+    <table>
+      <thead>
+        <tr><th>角色</th><th>大白话职责</th><th>本仓库示例里是谁</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>外观 Facade</strong></td>
+          <td>总开关：对外就几个大白话按钮，对内按正确顺序指挥所有子系统。记住的是"流程"，不是"手艺"。</td>
+          <td><code>HomeTheaterFacade</code>（<code>watchMovie</code> / <code>endMovie</code>）</td>
+        </tr>
+        <tr>
+          <td><strong>子系统们</strong></td>
+          <td>各管一摊的师傅：灯光调亮暗、投影仪开关切源、功放管声音、播放器管放片，照常暴露自己全部接口。</td>
+          <td><code>Lights</code>、<code>Projector</code>、<code>Amplifier</code>、<code>StreamingPlayer</code></td>
+        </tr>
+        <tr>
+          <td><strong>客户端</strong></td>
+          <td>只想看电影的普通人：一行 <code>watchMovie("星际穿越")</code> 搞定，后厨的事一概不知。</td>
+          <td><code>main()</code></td>
+        </tr>
+      </tbody>
+    </table>
+    <p>解耦（把缠在一起的代码拆开，互不认识也能合作）关键在：外观封装的其实不是功能，而是<strong>"调用顺序"这个隐性知识</strong>——先调暗灯、再开投影、最后放片。客户端和子系统互相不认识，都只认识外观；而且<strong>外观没有锁门</strong>，发烧友仍然可以直接拿 <code>Projector</code> 自己调，外观只是提供了条更好走的路。</p>
+  </section>
+
+  <section class="card">
+    <h2>🗺️ 结构图（谁认识谁、谁调用谁）</h2>
+    <div class="diagram">
+      <div class="dbox">main<small>客户端 · 只想看电影</small></div>
+      <div class="darrow">调用<br><small>watchMovie("星际穿越")</small></div>
+      <div class="dbox key">HomeTheaterFacade<small>外观 · 总开关</small></div>
+      <div class="darrow">按顺序指挥<br><small>dim → turnOn →<br>setInput → play</small></div>
+      <div class="dstack">
+        <div class="dbox">Lights<small>灯光 · 调亮暗</small></div>
+        <div class="dbox">Projector<small>投影仪 · 开关切源</small></div>
+        <div class="dbox">Amplifier<small>功放 · 管声音</small></div>
+        <div class="dbox">StreamingPlayer<small>播放器 · 放片</small></div>
+      </div>
+    </div>
+    <p class="dcaption">箭头方向 = 调用方向：只有外观调子系统，子系统从不认识外观，更不互相聊天——这是它和中介者模式最大的区别。</p>
+  </section>
+
+  <section class="card">
+    <h2>🔄 运转步骤（跑一遍完整流程）</h2>
+    <ol class="steps">
+      <li><strong>各就各位</strong>：四个子系统对象（投影仪、功放、灯光、播放器）先建好，照常暴露各自的接口。</li>
+      <li><strong>装总开关</strong>：<code>HomeTheaterFacade</code> 构造时把这四个家伙统统收进来。</li>
+      <li><strong>按按钮</strong>：客户端调 <code>homeTheater.watchMovie("星际穿越")</code>——就这一行。</li>
+      <li><strong>内部指挥</strong>：调暗灯光到 20% → 开投影仪 → 切到 HDMI → 开功放 → 音量设 15 → 播放器放片，六步一气呵成。</li>
+      <li><strong>一键收尾</strong>：看完调 <code>endMovie()</code>，反着来一遍——停播、关功放、关投影、灯光恢复。</li>
+      <li><strong>想微调也行</strong>：觉得音量小？发烧友直接绕过外观调 <code>amplifier.setVolume(20)</code>——外观不拦人，它只是条捷径。</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>🔍 代码走读</h2>
+    <p>下面是本仓库 TypeScript 实现的骨架（完整版见 <a href="../ts/facade/main.ts">ts/facade/main.ts</a>，有删减）：</p>
+    <div class="code-header">ts/facade/main.ts（简化）</div>
+    <pre><code>// 子系统们：各管一摊，照常暴露自己的全部接口
+class Projector {
+  turnOn(): void { console.log("投影仪：开启"); }
+  setInput(source: string): void { console.log(`投影仪：切换输入源为 ${source}`); }
+  turnOff(): void { console.log("投影仪：关闭"); }
+}
+
+class Lights {
+  dim(level: number): void { console.log(`灯光：调暗至 ${level}%`); }
+  brighten(): void { console.log("灯光：恢复明亮"); }
+}
+// 功放 Amplifier、播放器 StreamingPlayer 同理，略
+
+// 外观：对外两个按钮，对内按正确顺序指挥
+class HomeTheaterFacade {
+  constructor(
+    private readonly projector: Projector,
+    private readonly amplifier: Amplifier,
+    private readonly lights: Lights,
+    private readonly player: StreamingPlayer,
+  ) {}
+
+  watchMovie(movie: string): void {
+    this.lights.dim(20);                        // 1 先调暗灯光
+    this.projector.turnOn();                    // 2 开投影仪
+    this.projector.setInput("HDMI-Streaming");  // 3 切输入源
+    this.amplifier.turnOn();                    // 4 开功放
+    this.amplifier.setVolume(15);               // 5 设音量
+    this.player.play(movie);                    // 6 最后才放片
+  }
+
+  endMovie(): void { /* 反着收尾，略 */ }
+}
+
+// 客户端：一行搞定，四个设备一个都不认识
+const homeTheater = new HomeTheaterFacade(
+  new Projector(), new Amplifier(), new Lights(), new StreamingPlayer(),
+);
+homeTheater.watchMovie("星际穿越");</code></pre>
+    <div class="callout tip">
+      <p class="callout-title">看懂这段代码，就看懂了整个模式</p>
+      <p>外观类里<strong>没有一行自己的业务</strong>，全是"按什么顺序调谁"。它真正的价值是把那串顺序知识从每个客户端的脑子里搬进了这一个类——顺序改了，只改这一处。</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚖️ 什么时候用，什么时候别用</h2>
+    <div class="two-col">
+      <div>
+        <h3>✅ 适合的场景</h3>
+        <ul class="checklist good">
+          <li>子系统挺复杂，但<strong>大多数人只用其中固定的几套流程</strong>——包个总开关最省心</li>
+          <li>想给一堆老代码包个<strong>干净的新入口</strong>，新代码只认门面不碰内脏</li>
+          <li>分层架构里给每层安个门面，层与层之间只走门面</li>
+        </ul>
+      </div>
+      <div>
+        <h3>❌ 不适合的场景</h3>
+        <ul class="checklist bad">
+          <li>子系统就两三个类、每类一两个方法——直接调用反而最清楚</li>
+          <li>客户端几乎每次都要深度定制流程、绕过门面——门面形同虚设</li>
+          <li>把几十种操作全堆进一个门面方法——那是造上帝类，不是造门面</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚠️ 容易踩的坑</h2>
+    <ul class="pitfalls">
+      <li><strong>外观变上帝类</strong>。观影、听歌、打游戏、开窗帘全往一个类里塞，最后谁也不敢动它——需求多了就拆成多个外观，一个场景一个。</li>
+      <li><strong>以为外观"锁死"了子系统</strong>。它只是推荐路线，子系统的公开接口照常能用；文档和团队约定要跟上，别自欺欺人。</li>
+      <li><strong>外观和子系统双向纠缠</strong>。子系统反过来调外观、或外观里塞进子系统的状态判断，单向的简单关系就被搅成蜘蛛网。</li>
+      <li><strong>把外观当中介者用</strong>。子系统之间需要互相协调、你来我往时，外观（单向传话）不够用，那活该中介者上场。</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>🔗 和其他模式的关系</h2>
+    <ul>
+      <li>和<strong><a href="mediator.html">中介者模式</a></strong>最容易混：<strong>外观是单向传话筒（客户端 → 外观 → 子系统，子系统之间互不认识）；中介者是双向的，专门协调一群互相认识的对象</strong>。</li>
+      <li>外观常做成<strong><a href="singleton.html">单例</a></strong>——一个家一台总开关，没必要人手一个。</li>
+      <li>和<strong><a href="adapter.html">适配器模式</a></strong>同属"包一层"：适配器翻译一个类的接口形状，外观简化一群类的调用流程。</li>
+    </ul>
+  </section>
+
+  <div class="remember">
+    <span class="remember-label">一 句 话 记 住 它</span>
+    <strong>复杂流程装个总开关：你只按一下，顺序和门道它全包了。</strong>
+  </div>
+
+  <section class="card">
+    <h2>📦 本仓库 9 种语言实现</h2>
+    <p>同一个家庭影院总开关的例子，用 9 种语言各写了一遍，挑一个你顺手的对照着看：</p>
+    <div class="lang-links">
+      <a class="pill" href="../cpp/facade/README.md">C++</a>
+      <a class="pill" href="../go/facade/README.md">Go</a>
+      <a class="pill" href="../java/facade/README.md">Java</a>
+      <a class="pill" href="../js/facade/README.md">JavaScript</a>
+      <a class="pill" href="../objc/facade/README.md">Objective-C</a>
+      <a class="pill" href="../python/facade/README.md">Python</a>
+      <a class="pill" href="../rust/facade/README.md">Rust</a>
+      <a class="pill" href="../swift/facade/README.md">Swift</a>
+      <a class="pill" href="../ts/facade/README.md">TypeScript</a>
+    </div>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="decorator.html"><span class="nav-label">← 上一个</span><span class="nav-title">装饰器模式</span></a>
+    <a class="next" href="flyweight.html"><span class="nav-label">下一个 →</span><span class="nav-title">享元模式</span></a>
+  </nav>
+
+</main>
+
+<footer class="site-footer">
+  <p>GoF 设计模式 · 大白话图解 —— 配套 <a href="../README.md">GoF 多语言实现仓库</a>（9 种语言 × 23 个模式）</p>
+</footer>
+
+</body>
+</html>

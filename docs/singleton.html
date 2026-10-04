@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>单例模式 · Singleton — GoF 设计模式大白话</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-category="creational">
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="index.html">📐 GoF 设计模式 · 大白话图解</a>
+    <nav class="crumbs">
+      <a href="index.html">首页</a><span>/</span>
+      <a href="index.html#creational">创建型</a><span>/</span>
+      <span class="current">单例</span>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <section class="pattern-hero">
+    <span class="badge">创建型</span>
+    <h1>单例模式 <small>Singleton</small></h1>
+    <p class="one-liner">一句话：<strong>全程序只此一份，谁来找、什么时候找，拿到的都是同一个它。</strong></p>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="prototype.html"><span class="nav-label">← 上一个</span><span class="nav-title">原型模式</span></a>
+    <a class="next" href="adapter.html"><span class="nav-label">下一个 →</span><span class="nav-title">适配器模式</span></a>
+  </nav>
+
+  <section class="card">
+    <h2>🌰 生活里的例子</h2>
+    <div class="callout analogy">
+      <p class="callout-title">全公司只有一枚的公章</p>
+      <p>公司规定：签合同必须盖公章，而<strong>公章全公司只此一枚</strong>，由行政部保管。谁要盖章，都得走行政部这个窗口——<strong>不许自己私刻一枚</strong>。行政部第一次收到申请，才把章从保险柜取出来，之后就一直放在手边，谁来都盖这一个。</p>
+      <p>还有一本<strong>用章登记簿</strong>：谁在什么时候盖了什么，全公司记的是同一本账。你在登记簿上补一笔，隔壁部门翻开就能看到。</p>
+    </div>
+    <p>对应到模式里：<strong>禁止私刻</strong>是 <code>private constructor()</code>，<strong>行政部窗口</strong>是 <code>getInstance()</code>，<strong>那枚章</strong>是唯一实例，<strong>第一次才取出保险柜</strong>是懒加载，<strong>同一本登记簿</strong>就是所有模块共享的状态。</p>
+  </section>
+
+  <section class="card">
+    <h2>😖 没有它会怎样</h2>
+    <p>本仓库的示例是<strong>全局日志器 Logger</strong>：程序里几十个模块都要记日志，还得统一控制日志级别。最直接的写法是每个模块自己 new 一个：</p>
+    <div class="callout pain">
+      <p class="callout-title">直来直去的写法（问题代码）</p>
+      <p>模块 A：<code>const loggerA = new Logger()</code></p>
+      <p>模块 B：<code>const loggerB = new Logger()</code></p>
+      <p>模块 C：<code>const loggerC = new Logger()</code> ……各记各的账。</p>
+    </div>
+    <p>这样写的麻烦：</p>
+    <ul>
+      <li><strong>行为不一致</strong>：模块 A 调 <code>setLevel(DEBUG)</code>，模块 B 手里那个还是 INFO——同一个程序，日志口径却不统一。</li>
+      <li><strong>日志四散</strong>：想查"刚才到底发生了什么"，没有一本完整的账，得挨个对象去翻。</li>
+      <li><strong>找不到总开关</strong>：想统一关掉日志、提高阈值，不知道该去哪儿下手。</li>
+      <li><strong>白占内存</strong>：N 个一模一样的对象，干着一个人的活。</li>
+    </ul>
+    <p>根子上的问题是<strong>该共享的被复制成了多份</strong>——有些东西天生就该只有一个。</p>
+  </section>
+
+  <section class="card">
+    <h2>👥 角色构成（这个模式由几块拼成）</h2>
+    <table>
+      <thead>
+        <tr><th>角色</th><th>大白话职责</th><th>本仓库示例里是谁</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>单例类 Singleton</strong></td>
+          <td>那个"只此一份"的类，自己看管自己的唯一实例。</td>
+          <td><code>Logger</code></td>
+        </tr>
+        <tr>
+          <td><strong>私有构造函数</strong></td>
+          <td>门口的禁令：外人休想 <code>new</code>。</td>
+          <td><code>private constructor()</code></td>
+        </tr>
+        <tr>
+          <td><strong>静态实例字段</strong></td>
+          <td>类自己保管的唯一一份，造过就存着。</td>
+          <td><code>private static instance</code></td>
+        </tr>
+        <tr>
+          <td><strong>全局访问点</strong></td>
+          <td>领东西的唯一窗口：第一次来才造，之后直接返。</td>
+          <td><code>static getInstance()</code></td>
+        </tr>
+        <tr>
+          <td><strong>共享状态</strong></td>
+          <td>全程序共用的账本和开关，一处改动全局生效。</td>
+          <td><code>logs</code> 数组、<code>level</code> 阈值、<code>setLevel()</code></td>
+        </tr>
+      </tbody>
+    </table>
+    <p>解耦关键：<strong>所有模块从同一个窗口领到同一个对象，状态天然全局一致</strong>——A 改了阈值，B 立刻感知，因为它们手里拿的本来就是同一个 <code>Logger</code>。</p>
+  </section>
+
+  <section class="card">
+    <h2>🗺️ 结构图（谁认识谁、谁调用谁）</h2>
+    <div class="diagram">
+      <div class="dstack">
+        <div class="dbox">模块 A<small>Logger.getInstance()</small></div>
+        <div class="dbox">模块 B<small>Logger.getInstance()</small></div>
+      </div>
+      <div class="darrow">都找同一个窗口<br><small>第一次才 new，之后直接返</small></div>
+      <div class="dbox key">Logger 唯一实例<small>private constructor + static instance</small></div>
+    </div>
+    <p class="dcaption">箭头方向 = 调用方向：所有模块最终都落到同一个对象上；new Logger() 这种写法在编译阶段就被私有构造函数拦下。</p>
+  </section>
+
+  <section class="card">
+    <h2>🔄 运转步骤（跑一遍完整流程）</h2>
+    <ol class="steps">
+      <li><strong>堵死歪门</strong>：有人手滑写 <code>new Logger()</code>？编译器直接报错——构造函数是 private 的。</li>
+      <li><strong>首次申请</strong>：模块 A 调 <code>Logger.getInstance()</code>，静态字段里还没实例，于是 <code>new</code> 一个存进去。</li>
+      <li><strong>再申请</strong>：模块 B 也调 <code>getInstance()</code>，这次静态字段里已经有了，原样返回，不再新建。</li>
+      <li><strong>共享状态</strong>：A 调 <code>setLevel(DEBUG)</code> 之后，B 记日志立刻按新阈值过滤——哥俩用的是同一个对象。</li>
+      <li><strong>验证</strong>：<code>logger1 === logger2</code> 打印 <code>true</code>，铁证：两次拿到的是同一个引用。</li>
+      <li><strong>统一查账</strong>：程序任何地方调 <code>getHistory()</code>，看到的都是同一本完整日志。</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>🔍 代码走读</h2>
+    <p>下面是本仓库 TypeScript 实现的骨架（完整版见 <a href="../ts/singleton/main.ts">ts/singleton/main.ts</a>，有删减）：</p>
+    <div class="code-header">ts/singleton/main.ts（简化）</div>
+    <pre><code>class Logger {
+  // 唯一实例：类自己保管，静态私有字段
+  private static instance: Logger | undefined;
+
+  private readonly logs: string[] = [];
+  private level: LogLevel = LogLevel.INFO;
+
+  // 私有构造函数：外人休想 new Logger()
+  private constructor() {}
+
+  // 全局访问点：第一次来才造，之后都用这一个（懒加载）
+  static getInstance(): Logger {
+    if (Logger.instance === undefined) {
+      Logger.instance = new Logger();
+    }
+    return Logger.instance;
+  }
+
+  setLevel(level: LogLevel): void {
+    this.level = level;   // 所有"模块"立刻感知新阈值
+  }
+
+  log(level: LogLevel, message: string): void {
+    if (LOG_LEVEL_RANK[level] &lt; LOG_LEVEL_RANK[this.level]) return; // 低于阈值，丢弃
+    this.logs.push(`[${level}] ${message}`);
+  }
+}
+
+// 两个"模块"拿到的其实是同一个对象
+const a = Logger.getInstance();
+const b = Logger.getInstance();
+a === b;  // true</code></pre>
+    <div class="callout tip">
+      <p class="callout-title">看懂这段代码，就看懂了整个模式</p>
+      <p>单例的全部机关就两道锁：<strong>构造函数私有（不许自己造）+ 静态字段缓存（造过就不再造）</strong>。<code>getInstance()</code> 里那三行 if 是"懒加载"——不用就不造，第一次真用到了才造。</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚖️ 什么时候用，什么时候别用</h2>
+    <div class="two-col">
+      <div>
+        <h3>✅ 适合的场景</h3>
+        <ul class="checklist good">
+          <li>全程序<strong>确实只能有一份</strong>的东西：日志器、配置中心、连接池、线程池</li>
+          <li>需要一个集中的<strong>"总开关"</strong>来管理共享状态（比如日志级别）</li>
+          <li>实例创建昂贵，希望<strong>拖到真用的时候再建</strong>（懒加载）</li>
+        </ul>
+      </div>
+      <div>
+        <h3>❌ 不适合的场景</h3>
+        <ul class="checklist bad">
+          <li>只是为了"随处都能访问"图方便——那叫全局变量，是坏味道不是模式</li>
+          <li>单元测试需要替换成假实现——单例把依赖藏死了，测试很痛苦</li>
+          <li>将来可能要多实例（比如每个用户一份）——现在硬写单例，以后拆得撕心裂肺</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚠️ 容易踩的坑</h2>
+    <ul class="pitfalls">
+      <li><strong>变相全局变量</strong>。什么状态都往单例里塞，最后它长成"什么都知道的上帝对象"，谁都不敢动，一改全崩。</li>
+      <li><strong>隐藏依赖</strong>。类里偷偷 <code>getInstance()</code>，依赖关系从函数签名上完全看不出来——换实现、写测试都无从下手。</li>
+      <li><strong>并发不安全</strong>。本仓库是 TS 单线程演示；在 Java 这类多线程语言里，两个线程同时首次调用可能造出两个实例，得加锁或换更稳的写法。</li>
+      <li><strong>常驻内存</strong>。唯一实例活多久程序活多久，里面囤的东西（比如本例的 <code>logs</code> 数组）只增不减就是慢性内存泄漏。</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>🔗 和其他模式的关系</h2>
+    <ul>
+      <li><strong><a href="observer.html">观察者模式</a></strong>里的"全局事件总线"几乎总是做成单例——保证大家订阅的是同一份名单。</li>
+      <li><strong><a href="facade.html">外观模式</a></strong>的外观对象常常也是单例：整个系统只需要一个对外的门面。</li>
+      <li><strong><a href="flyweight.html">享元模式</a></strong>共享大量细粒度对象，单例可以看作它的极端特例——"只共享一个"。</li>
+    </ul>
+  </section>
+
+  <div class="remember">
+    <span class="remember-label">一 句 话 记 住 它</span>
+    <strong>全公司就一枚章，盖章都得找它。</strong>
+  </div>
+
+  <section class="card">
+    <h2>📦 本仓库 9 种语言实现</h2>
+    <p>同一个全局日志器的例子，用 9 种语言各写了一遍，挑一个你顺手的对照着看：</p>
+    <div class="lang-links">
+      <a class="pill" href="../cpp/singleton/README.md">C++</a>
+      <a class="pill" href="../go/singleton/README.md">Go</a>
+      <a class="pill" href="../java/singleton/README.md">Java</a>
+      <a class="pill" href="../js/singleton/README.md">JavaScript</a>
+      <a class="pill" href="../objc/singleton/README.md">Objective-C</a>
+      <a class="pill" href="../python/singleton/README.md">Python</a>
+      <a class="pill" href="../rust/singleton/README.md">Rust</a>
+      <a class="pill" href="../swift/singleton/README.md">Swift</a>
+      <a class="pill" href="../ts/singleton/README.md">TypeScript</a>
+    </div>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="prototype.html"><span class="nav-label">← 上一个</span><span class="nav-title">原型模式</span></a>
+    <a class="next" href="adapter.html"><span class="nav-label">下一个 →</span><span class="nav-title">适配器模式</span></a>
+  </nav>
+
+</main>
+
+<footer class="site-footer">
+  <p>GoF 设计模式 · 大白话图解 —— 配套 <a href="../README.md">GoF 多语言实现仓库</a>（9 种语言 × 23 个模式）</p>
+</footer>
+
+</body>
+</html>

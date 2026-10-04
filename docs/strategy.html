@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>策略模式 · Strategy — GoF 设计模式大白话</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-category="behavioral">
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="index.html">📐 GoF 设计模式 · 大白话图解</a>
+    <nav class="crumbs">
+      <a href="index.html">首页</a><span>/</span>
+      <a href="index.html#behavioral">行为型</a><span>/</span>
+      <span class="current">策略</span>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <section class="pattern-hero">
+    <span class="badge">行为型</span>
+    <h1>策略模式 <small>Strategy</small></h1>
+    <p class="one-liner">一句话：<strong>同一件事有好几种做法，把每种做法各包成一个对象，用哪套随时换、随换随生效。</strong></p>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="state.html"><span class="nav-label">← 上一个</span><span class="nav-title">状态模式</span></a>
+    <a class="next" href="template-method.html"><span class="nav-label">下一个 →</span><span class="nav-title">模板方法模式</span></a>
+  </nav>
+
+  <section class="card">
+    <h2>🌰 生活里的例子</h2>
+    <div class="callout analogy">
+      <p class="callout-title">导航 App 选出行方式</p>
+      <p>同样从家到公司，导航 App 底下有几个图标：<strong>驾车、公交、步行</strong>。点哪个，它就用哪套算法给你算路线——驾车走高架，公交挑换乘少的，步行专钻小胡同。</p>
+      <p>注意一个细节：你的起点终点一直没变，变的只是"用哪套算法"。而且你半路改主意，从驾车切到公交，App 不用重启、不用重填地址，换一套算法重新算就是了。</p>
+    </div>
+    <p>对应到模式里：<strong>导航 App 是"上下文"，"算路线"这个约定是策略接口，驾车 / 公交 / 步行三套算法是三个具体策略，你点图标就是 setStrategy() 换人</strong>。目的地（数据）不动，算法随便换。</p>
+  </section>
+
+  <section class="card">
+    <h2>😖 没有它会怎样</h2>
+    <p>本仓库的例子是购物车结账：同一笔钱，可以用信用卡、PayPal、加密货币三种方式付。最直接的写法：在结账方法里挂一串 if-else。</p>
+    <div class="callout pain">
+      <p class="callout-title">直来直去的写法（问题代码）</p>
+      <p>结账时挨个问支付类型：</p>
+      <p><code>if (payType === "creditCard") { 卡号打码、拼信用卡话术 }</code><br>
+      <code>else if (payType === "paypal") { 拼账户邮箱话术 }</code><br>
+      <code>else if (payType === "crypto") { 算汇率、折算 USDT }</code> ……</p>
+    </div>
+    <p>眼下能跑，越往后越难受：</p>
+    <ul>
+      <li><strong>购物车被迫懂每种支付的门道</strong>：卡号怎么打码、汇率怎么折算，全写在结账方法里，方法越长越胖。</li>
+      <li><strong>加一种支付就要动一次结账代码</strong>：新接一个"银行转账"，又得往 if 链里插一段，改坏了影响所有支付方式。</li>
+      <li><strong>支付逻辑没法单独测试和复用</strong>：想单测信用卡那段？对不起，它长在购物车身上，抠都抠不出来。</li>
+    </ul>
+    <p>根子上的问题：<strong>购物车不该懂"怎么付钱"，它只该懂"把钱交给会付的人"</strong>。把每种付法各包成一个对象，问题就消失了。</p>
+  </section>
+
+  <section class="card">
+    <h2>👥 角色构成（这个模式由几块拼成）</h2>
+    <table>
+      <thead>
+        <tr><th>角色</th><th>大白话职责</th><th>本仓库示例里是谁</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>策略接口 Strategy</strong></td>
+          <td>一份合同：只约定"会收钱"这一件事（<code>pay(amount)</code>），不管你具体怎么收。</td>
+          <td><code>PaymentStrategy</code> 接口</td>
+        </tr>
+        <tr>
+          <td><strong>具体策略</strong></td>
+          <td>各种干活的手艺人：信用卡有信用卡的收法，PayPal 有 PayPal 的收法，互相不认识也不打扰。</td>
+          <td><code>CreditCardStrategy</code>、<code>PayPalStrategy</code>、<code>CryptoStrategy</code></td>
+        </tr>
+        <tr>
+          <td><strong>上下文 Context</strong></td>
+          <td>用人单位：手里攥着当前策略，活儿来了转手外包出去，还能随时换人。</td>
+          <td><code>ShoppingCart</code></td>
+        </tr>
+      </tbody>
+    </table>
+    <p>解耦（把缠在一起的代码拆开，互不认识也能合作）的关键：<strong>购物车只认识"策略接口"，不认识任何一种具体支付</strong>。所以加第四种支付方式，购物车一行代码都不用改——只要新来的会 <code>pay()</code>，就能上岗。</p>
+  </section>
+
+  <section class="card">
+    <h2>🗺️ 结构图（谁认识谁、谁调用谁）</h2>
+    <div class="diagram">
+      <div class="dbox key">ShoppingCart<small>上下文 · 只管算总价</small></div>
+      <div class="darrow">checkout() 外包<br><small>this.strategy.pay(total)</small></div>
+      <div class="dstack">
+        <div class="dbox">CreditCardStrategy<small>信用卡</small></div>
+        <div class="dbox">PayPalStrategy<small>PayPal</small></div>
+        <div class="dbox">CryptoStrategy<small>加密货币</small></div>
+      </div>
+    </div>
+    <p class="dcaption">箭头方向 = 调用方向：购物车只调用策略接口；换支付方式 = setStrategy() 把手里的引用换个对象，别的一概不动。</p>
+  </section>
+
+  <section class="card">
+    <h2>🔄 运转步骤（跑一遍完整流程）</h2>
+    <ol class="steps">
+      <li><strong>装货</strong>：<code>cart.addItem("机械键盘", 399)</code>、<code>addItem("鼠标", 199)</code>，商品进了购物车。</li>
+      <li><strong>挑做法</strong>：创建 <code>new ShoppingCart(new CreditCardStrategy("4111...", "123"))</code>——一开始用信用卡结账。</li>
+      <li><strong>结账</strong>：<code>cart.checkout()</code> 把商品加出总价 598，转手交给当前策略：<code>this.strategy.pay(598)</code>，信用卡策略打印支付信息。</li>
+      <li><strong>换人</strong>：<code>cart.setStrategy(new PayPalStrategy("buyer@example.com"))</code>——购物车只是把 <code>strategy</code> 引用换了个对象。</li>
+      <li><strong>再结账</strong>：同一辆车、同一批货、同一个 checkout 方法，这次 PayPal 策略出面，输出另一种支付话术；再切加密货币还能算汇率折 USDT。</li>
+      <li><strong>回头看</strong>：从头到尾 <code>ShoppingCart</code> 里没有一个判断支付类型的 if。</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>🔍 代码走读</h2>
+    <p>下面是本仓库 TypeScript 实现的骨架（完整版见 <a href="../ts/strategy/main.ts">ts/strategy/main.ts</a>，有删减）：</p>
+    <div class="code-header">ts/strategy/main.ts（简化）</div>
+    <pre><code>// 策略接口：只约定"会收钱"这一件事
+interface PaymentStrategy {
+  readonly name: string;
+  pay(amount: number): string;
+}
+
+// 具体策略：每种支付方式各管各的，互相不认识
+class CreditCardStrategy implements PaymentStrategy {
+  readonly name = "信用卡";
+
+  constructor(private readonly cardNumber: string, private readonly cvv: string) {}
+
+  pay(amount: number): string {          // 信用卡的收法：卡号打码
+    const masked = this.cardNumber.slice(-4).padStart(this.cardNumber.length, "*");
+    return `使用信用卡(${masked}) 支付 ¥${amount.toFixed(2)}`;
+  }
+}
+
+// 上下文：只管算总价，收钱的事全外包
+class ShoppingCart {
+  constructor(private strategy: PaymentStrategy) {}
+
+  setStrategy(strategy: PaymentStrategy): void {  // ② 运行时换做法
+    this.strategy = strategy;
+  }
+
+  checkout(): void {
+    const total = 598;
+    console.log(this.strategy.pay(total));         // ① 委托给当前策略
+  }
+}</code></pre>
+    <div class="callout tip">
+      <p class="callout-title">看懂这段代码，就看懂了整个模式</p>
+      <p>核心就一行：<strong><code>this.strategy.pay(total)</code>——上下文把活儿连同数据一起递给当前策略</strong>。三种支付三套实现互不知晓，换人只是一个赋值，if-else 从此绝迹。</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚖️ 什么时候用，什么时候别用</h2>
+    <div class="two-col">
+      <div>
+        <h3>✅ 适合的场景</h3>
+        <ul class="checklist good">
+          <li>同一件事确实有<strong>多套可互换的算法</strong>：支付、排序、压缩、路线规划、折扣计算</li>
+          <li>需要在<strong>运行时换做法</strong>，而不是写死在代码里</li>
+          <li>if-else 的每个分支都是一整套逻辑，方法已经开始发胖</li>
+        </ul>
+      </div>
+      <div>
+        <h3>❌ 不适合的场景</h3>
+        <ul class="checklist bad">
+          <li>几个算法就差一两行——抽成一堆类，读代码的人反而要追好几个文件</li>
+          <li>算法编译期就定死、永远不会换——直接写函数调用更直白</li>
+          <li>调用方被迫搞清每个策略的区别才能选对——细节泄漏了，不如再配个工厂</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚠️ 容易踩的坑</h2>
+    <ul class="pitfalls">
+      <li><strong>策略越加越多没人管 → 类爆炸</strong>。一堆只差个参数的策略类（打八折、打九折、打九五折……），不如合并成一个带参数的策略。</li>
+      <li><strong>上下文和策略偷偷共享可变状态 → 换人时残留脏数据</strong>。策略应该是"给你数据、你还我结果"，各自不留后手，否则换策略后出的 bug 极难查。</li>
+      <li><strong>策略接口越定越肥 → 每加一个方法全体现有策略都得改</strong>。接口只留"做这件事"的最小约定（本仓库就一个 <code>pay()</code>），别把各种边角需求都塞进来。</li>
+      <li><strong>和状态模式傻傻分不清 → 用错场合</strong>。记住：策略之间互不认识、由你挑；状态之间互相认识、自己接力流转。分不清就回到"谁决定切换"这一问。</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>🔗 和其他模式的关系</h2>
+    <ul>
+      <li>和<strong><a href="state.html">状态模式</a></strong>结构几乎是双胞胎，差别在意图：<strong>策略是你主动挑一把工具（换不换你说了算），状态是当前状态推着你走（换班由状态自己接力）</strong>。</li>
+      <li>策略对象常用<strong><a href="factory-method.html">工厂方法模式</a></strong>来造：调用方说"给我信用卡策略"，连 new 都不用自己写。</li>
+      <li>和<strong><a href="command.html">命令模式</a></strong>都爱"把一段逻辑包成对象"：策略包的是"一种做法"，重在替换；命令包的是"一次请求"，重在排队、撤销、记录。</li>
+    </ul>
+  </section>
+
+  <div class="remember">
+    <span class="remember-label">一 句 话 记 住 它</span>
+    <strong>一件事多种做法，车不动，引擎随便换。</strong>
+  </div>
+
+  <section class="card">
+    <h2>📦 本仓库 9 种语言实现</h2>
+    <p>同一个购物车换支付方式的例子，用 9 种语言各写了一遍，挑一个你顺手的对照着看：</p>
+    <div class="lang-links">
+      <a class="pill" href="../cpp/strategy/README.md">C++</a>
+      <a class="pill" href="../go/strategy/README.md">Go</a>
+      <a class="pill" href="../java/strategy/README.md">Java</a>
+      <a class="pill" href="../js/strategy/README.md">JavaScript</a>
+      <a class="pill" href="../objc/strategy/README.md">Objective-C</a>
+      <a class="pill" href="../python/strategy/README.md">Python</a>
+      <a class="pill" href="../rust/strategy/README.md">Rust</a>
+      <a class="pill" href="../swift/strategy/README.md">Swift</a>
+      <a class="pill" href="../ts/strategy/README.md">TypeScript</a>
+    </div>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="state.html"><span class="nav-label">← 上一个</span><span class="nav-title">状态模式</span></a>
+    <a class="next" href="template-method.html"><span class="nav-label">下一个 →</span><span class="nav-title">模板方法模式</span></a>
+  </nav>
+
+</main>
+
+<footer class="site-footer">
+  <p>GoF 设计模式 · 大白话图解 —— 配套 <a href="../README.md">GoF 多语言实现仓库</a>（9 种语言 × 23 个模式）</p>
+</footer>
+
+</body>
+</html>

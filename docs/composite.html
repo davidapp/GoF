@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>组合模式 · Composite — GoF 设计模式大白话</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-category="structural">
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="index.html">📐 GoF 设计模式 · 大白话图解</a>
+    <nav class="crumbs">
+      <a href="index.html">首页</a><span>/</span>
+      <a href="index.html#structural">结构型</a><span>/</span>
+      <span class="current">组合</span>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <section class="pattern-hero">
+    <span class="badge">结构型</span>
+    <h1>组合模式 <small>Composite</small></h1>
+    <p class="one-liner">一句话：<strong>把"一个"和"一群"做成同一个模样，用的人不用挑——一把抓，树里哪层都好使。</strong></p>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="bridge.html"><span class="nav-label">← 上一个</span><span class="nav-title">桥接模式</span></a>
+    <a class="next" href="decorator.html"><span class="nav-label">下一个 →</span><span class="nav-title">装饰器模式</span></a>
+  </nav>
+
+  <section class="card">
+    <h2>🌰 生活里的例子</h2>
+    <div class="callout analogy">
+      <p class="callout-title">公司算工资</p>
+      <p>老板问 HR："这个月研发部工资总共多少？"HR 不会去挨个数每个员工，而是打电话给各小组长："把你们组的工资总数报给我。"小组长再问手下的每个人。钱一层层往上报，最后加出总数。</p>
+      <p>注意这里的关键：<strong>"算工资"这个动作，对单个员工和一个部门来说是同一件事</strong>——员工直接报自己的数，部门把下面人的数加起来。老板根本不用管听电话的是一个人还是一个部门。</p>
+    </div>
+    <p>对应到模式里：<strong>员工是"叶子"，部门是"容器"（容器里既能装员工、也能装更小的部门），"报工资总数"就是它们的公共接口</strong>。树状层级 + 统一接口，就是组合模式的全部。</p>
+  </section>
+
+  <section class="card">
+    <h2>😖 没有它会怎样</h2>
+    <p>本仓库的例子是文件系统：统计一个目录的总大小、打印整棵树。如果文件和目录长得不一样，客户端就得处处提防：</p>
+    <div class="callout pain">
+      <p class="callout-title">直来直去的写法（问题代码）</p>
+      <p>拿到一个节点先验明正身，再分类处理：</p>
+      <p><code>if (node 是文件) { 取 size }</code> → <code>else if (node 是目录) { for 循环孩子，孩子又可能是目录，再套 if…… }</code></p>
+    </div>
+    <p>这样写眼下能跑，但麻烦在后头：</p>
+    <ul>
+      <li><strong>嵌套层级一深，if 和 for 就套成洋葱</strong>，三层目录三层循环，没人敢维护。</li>
+      <li><strong>再来一个需求（打印树、统计文件数）就得把这套判断重抄一遍</strong>，判断逻辑到处复制。</li>
+      <li><strong>客户端被迫记住"文件和目录不一样"这个细节</strong>，而这个细节本该由数据结构自己消化。</li>
+    </ul>
+    <p>根子上的问题是：<strong>文件和目录没长成同一张脸</strong>，害得每个用它们的人都要先认脸再动手。</p>
+  </section>
+
+  <section class="card">
+    <h2>👥 角色构成（这个模式由几块拼成）</h2>
+    <table>
+      <thead>
+        <tr><th>角色</th><th>大白话职责</th><th>本仓库示例里是谁</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>组件 Component</strong></td>
+          <td>统一的脸：定下叶子 和容器 都必须会的动作，大家只认这张脸。</td>
+          <td><code>FileSystemNode</code> 接口（<code>getName</code> / <code>getSize</code> / <code>print</code>）</td>
+        </tr>
+        <tr>
+          <td><strong>叶子 Leaf</strong></td>
+          <td>光杆司令：没有下级，问它什么直接给答案。</td>
+          <td><code>FileLeaf</code>（一个文件，大小是定死的）</td>
+        </tr>
+        <tr>
+          <td><strong>容器 Composite</strong></td>
+          <td>小组长：揣着一个孩子列表，孩子可以是叶子也可以是另一个容器；问它什么，它就把孩子们问一遍再加起来。</td>
+          <td><code>Directory</code>（持有 <code>children</code> 数组）</td>
+        </tr>
+        <tr>
+          <td><strong>客户端</strong></td>
+          <td>拿树人：不管手里是文件还是目录，一句话就出结果。</td>
+          <td><code>main()</code>（<code>root.getSize()</code> 一句算总大小）</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>解耦（把缠在一起的代码拆开，互不认识也能合作）关键在：<strong>容器和孩子都实现同一个 <code>FileSystemNode</code> 接口，客户端全程不用 <code>instanceof</code> 区分"单个还是一堆"</strong>；"谁装着谁"的知识收进了树自己身上，递归会自动处理任意深度的嵌套。</p>
+  </section>
+
+  <section class="card">
+    <h2>🗺️ 结构图（谁认识谁、谁调用谁）</h2>
+    <div class="diagram">
+      <div class="dstack">
+        <div class="dbox key">project/<small>Directory · 根</small></div>
+        <div class="diagram">
+          <div class="dstack">
+            <div class="dbox key">src/<small>Directory</small></div>
+            <div class="dstack">
+              <div class="dbox">index.ts<small>FileLeaf</small></div>
+              <div class="dbox">utils.ts<small>FileLeaf</small></div>
+            </div>
+          </div>
+          <div class="dstack">
+            <div class="dbox key">assets/<small>Directory</small></div>
+            <div class="dbox">logo.png<small>FileLeaf</small></div>
+          </div>
+          <div class="dstack">
+            <div class="dbox">README.md<small>FileLeaf</small></div>
+            <div class="dbox">package.json<small>FileLeaf</small></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="dcaption">Directory 的孩子可以是 FileLeaf，也可以是另一个 Directory（src、assets）——树就这样一层层长下去；谁也不认识"整棵树"，只认识自己的孩子。</p>
+  </section>
+
+  <section class="card">
+    <h2>🔄 运转步骤（跑一遍完整流程）</h2>
+    <ol class="steps">
+      <li><strong>定脸</strong>：定好 <code>FileSystemNode</code> 接口——<code>getName</code>、<code>getSize</code>、<code>print</code> 三个方法。</li>
+      <li><strong>造叶子</strong>：<code>FileLeaf</code> 存名字和字节数，问它大小直接报数。</li>
+      <li><strong>造容器</strong>：<code>Directory</code> 存一个 <code>children</code> 数组，还提供 <code>add()</code> 往里塞孩子。</li>
+      <li><strong>建树</strong>：<code>srcDir.add(文件)</code>，再 <code>root.add(srcDir)</code>——目录里套目录，想多深有多深。</li>
+      <li><strong>一问到底</strong>：<code>root.getSize()</code>——根问每个孩子"你多大？"，孩子若是目录就接着问它的孩子，一路递归到叶子，数字层层往上报。</li>
+      <li><strong>顺手换招</strong>：<code>root.print("")</code> 同样递归，缩进一层层加深，树形结构打印出来了——客户端没写一行判断。</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>🔍 代码走读</h2>
+    <p>下面是本仓库 TypeScript 实现的骨架（完整版见 <a href="../ts/composite/main.ts">ts/composite/main.ts</a>，有删减）：</p>
+    <div class="code-header">ts/composite/main.ts（简化）</div>
+    <pre><code>// 组件接口：文件和目录长同一张脸
+interface FileSystemNode {
+  getName(): string;
+  getSize(): number;
+  print(indent: string): void;
+}
+
+// 叶子：单个文件，大小直接给
+class FileLeaf implements FileSystemNode {
+  constructor(
+    private readonly name: string,
+    private readonly size: number, // 字节
+  ) {}
+  getSize(): number { return this.size; }
+  // getName / print 略
+}
+
+// 容器：目录，孩子可以是叶子也可以是另一个目录
+class Directory implements FileSystemNode {
+  private readonly children: FileSystemNode[] = [];
+
+  add(node: FileSystemNode): this {
+    this.children.push(node);
+    return this; // 链式 add，方便搭树
+  }
+
+  // 递归汇总：目录大小 = 所有孩子大小之和
+  getSize(): number {
+    return this.children.reduce((sum, child) =&gt; sum + child.getSize(), 0);
+  }
+  // print 同理递归：先打印自己，再让孩子多缩进两格，略
+}
+
+// 客户端：不管拿到文件还是目录，同一句话
+root.add(new Directory("src").add(new FileLeaf("index.ts", 1200)));
+console.log(`项目总大小: ${root.getSize()} B`); // 递归自动算</code></pre>
+    <div class="callout tip">
+      <p class="callout-title">看懂这段代码，就看懂了整个模式</p>
+      <p>灵魂就一行：<strong><code>getSize()</code> 里那个 <code>child.getSize()</code></strong>——容器调孩子用的方法和客户端调容器的方法是同一个。自己调自己，树再深也能一层层传到底。</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚖️ 什么时候用，什么时候别用</h2>
+    <div class="two-col">
+      <div>
+        <h3>✅ 适合的场景</h3>
+        <ul class="checklist good">
+          <li>数据天生是<strong>树形层级</strong>：文件系统、UI 控件树、组织架构、菜单子菜单</li>
+          <li>要对整棵树做<strong>递归统计或遍历</strong>：算总大小、数节点、整体序列化</li>
+          <li>希望客户端<strong>完全不用区分</strong>"拿到的是单个还是一串"，一把梭处理</li>
+        </ul>
+      </div>
+      <div>
+        <h3>❌ 不适合的场景</h3>
+        <ul class="checklist bad">
+          <li>数据压根不是树——硬凑层级纯属自找麻烦</li>
+          <li>叶子和容器行为差异巨大，硬统一接口后两边都别扭（叶子被迫装哑巴）</li>
+          <li>对树上不同节点的操作经常新增——那更适合配访问者模式</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚠️ 容易踩的坑</h2>
+    <ul class="pitfalls">
+      <li><strong>把 add() 塞进公共接口</strong>。叶子被迫实现"往文件里塞子文件"这种荒唐方法。本仓库的做法：<code>add</code> 只放在 <code>Directory</code> 上，牺牲一点"完全一致"换安全。</li>
+      <li><strong>树太深递归爆栈</strong>。层级成千上万时递归会栈溢出，得改成用显式栈的循环写法。</li>
+      <li><strong>删孩子不清引用</strong>。节点从逻辑上拿掉了，父亲的 <code>children</code> 里还攥着它，统计和打印就出错。</li>
+      <li><strong>在容器里对叶子做特判</strong>。递归时写"如果是文件就……"——又把接口统一的功劳亲手拆了。</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>🔗 和其他模式的关系</h2>
+    <ul>
+      <li>配<strong><a href="iterator.html">迭代器模式</a></strong>最顺：遍历整棵组合树时，用它把递归细节也藏起来，客户端只管 for-of。</li>
+      <li>配<strong><a href="visitor.html">访问者模式</a></strong>：想对树上不同节点干不同的活、又不想污染这些类，访问者负责分发。</li>
+      <li>和<strong><a href="decorator.html">装饰器模式</a></strong>是亲戚：装饰器是"包一个"，组合是"装一群"，都是靠"实现同一接口"让外界无感。</li>
+    </ul>
+  </section>
+
+  <div class="remember">
+    <span class="remember-label">一 句 话 记 住 它</span>
+    <strong>一个和一群长同一张脸：拿树的人不用挑，一层递归传到底。</strong>
+  </div>
+
+  <section class="card">
+    <h2>📦 本仓库 9 种语言实现</h2>
+    <p>同一个文件系统树的例子，用 9 种语言各写了一遍，挑一个你顺手的对照着看：</p>
+    <div class="lang-links">
+      <a class="pill" href="../cpp/composite/README.md">C++</a>
+      <a class="pill" href="../go/composite/README.md">Go</a>
+      <a class="pill" href="../java/composite/README.md">Java</a>
+      <a class="pill" href="../js/composite/README.md">JavaScript</a>
+      <a class="pill" href="../objc/composite/README.md">Objective-C</a>
+      <a class="pill" href="../python/composite/README.md">Python</a>
+      <a class="pill" href="../rust/composite/README.md">Rust</a>
+      <a class="pill" href="../swift/composite/README.md">Swift</a>
+      <a class="pill" href="../ts/composite/README.md">TypeScript</a>
+    </div>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="bridge.html"><span class="nav-label">← 上一个</span><span class="nav-title">桥接模式</span></a>
+    <a class="next" href="decorator.html"><span class="nav-label">下一个 →</span><span class="nav-title">装饰器模式</span></a>
+  </nav>
+
+</main>
+
+<footer class="site-footer">
+  <p>GoF 设计模式 · 大白话图解 —— 配套 <a href="../README.md">GoF 多语言实现仓库</a>（9 种语言 × 23 个模式）</p>
+</footer>
+
+</body>
+</html>

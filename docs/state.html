@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>状态模式 · State — GoF 设计模式大白话</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-category="behavioral">
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="index.html">📐 GoF 设计模式 · 大白话图解</a>
+    <nav class="crumbs">
+      <a href="index.html">首页</a><span>/</span>
+      <a href="index.html#behavioral">行为型</a><span>/</span>
+      <span class="current">状态</span>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <section class="pattern-hero">
+    <span class="badge">行为型</span>
+    <h1>状态模式 <small>State</small></h1>
+    <p class="one-liner">一句话：<strong>同一个操作，落在不同状态下反应不同——把每种状态做成一个小对象，谁当班谁说了算。</strong></p>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="observer.html"><span class="nav-label">← 上一个</span><span class="nav-title">观察者模式</span></a>
+    <a class="next" href="strategy.html"><span class="nav-label">下一个 →</span><span class="nav-title">策略模式</span></a>
+  </nav>
+
+  <section class="card">
+    <h2>🌰 生活里的例子</h2>
+    <div class="callout analogy">
+      <p class="callout-title">手机的响铃 / 静音 / 勿扰模式</p>
+      <p>同一通电话打进来，<strong>响铃模式</strong>下手机大声唱歌，<strong>静音模式</strong>下只轻轻震动，<strong>勿扰模式</strong>下屏幕亮一下就没下文了。来电还是那通来电，反应却完全不同——区别不在电话，在手机此刻处于哪种模式。</p>
+      <p>而且你切换模式时，手机不用拆开重组：它只是把"处理来电"这件事交给当前在班的那个模式对象。你按音量键选模式，相当于告诉手机：下一位，你来值班。</p>
+    </div>
+    <p>对应到模式里：<strong>手机是"上下文"，三种模式是三个"具体状态"，来电是那个同样的操作</strong>。上下文自己不动脑，把操作原样转给当班的状态；干完活，状态自己决定下一班交给谁。</p>
+  </section>
+
+  <section class="card">
+    <h2>😖 没有它会怎样</h2>
+    <p>本仓库的例子是一个音频播放器 <code>AudioPlayer</code>，有播放中 / 已暂停 / 已停止三种状态，<code>play()</code> / <code>pause()</code> / <code>stop()</code> 三个操作。最直接的写法：每个方法开头都问一遍"我现在是什么状态"。</p>
+    <div class="callout pain">
+      <p class="callout-title">直来直去的写法（问题代码）</p>
+      <p>每个方法里都挂一串 if-else：</p>
+      <p><code>if (state === "playing") { 暂停播放; state = "paused"; }</code><br>
+      <code>else if (state === "paused") { 已经处于暂停状态; }</code><br>
+      <code>else if (state === "stopped") { 已停止，无法暂停; }</code> ……</p>
+    </div>
+    <p>三个操作 × 三种状态 = 九个分支，眼下写得出来，后头要人命：</p>
+    <ul>
+      <li><strong>巨型 if-else 满天飞</strong>：每个方法都要把所有状态从头问一遍，重复的判断抄三份。</li>
+      <li><strong>加一种状态，全城开挖</strong>：想加个"快进中"？三个方法里的 if-else 链一个都不能漏，漏一处就出诡异 bug。</li>
+      <li><strong>看不出状态怎么流转</strong>：散在各分支里的字符串赋值，谁也说不清"从哪能到哪"，改起来全靠胆子。</li>
+    </ul>
+    <p>根子上的问题：<strong>"状态"和"该状态下的行为"被硬拆在两处</strong>。把它们绑在一起、一种状态一个类，问题就消失了。</p>
+  </section>
+
+  <section class="card">
+    <h2>👥 角色构成（这个模式由几块拼成）</h2>
+    <table>
+      <thead>
+        <tr><th>角色</th><th>大白话职责</th><th>本仓库示例里是谁</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>上下文 Context</strong></td>
+          <td>对外的那张脸：持有"当前状态"，收到操作就原样转给当前状态。自己一行判断都不写。</td>
+          <td><code>AudioPlayer</code></td>
+        </tr>
+        <tr>
+          <td><strong>状态接口 State</strong></td>
+          <td>值班守则：约定每种状态都要会处理 <code>play</code> / <code>pause</code> / <code>stop</code> 三件事。</td>
+          <td><code>PlayerState</code> 接口</td>
+        </tr>
+        <tr>
+          <td><strong>具体状态</strong></td>
+          <td>真正的值班员：只回答"我这种状态下，这个操作怎么办"，并决定下一个接班的是谁。</td>
+          <td><code>PlayingState</code>、<code>PausedState</code>、<code>StoppedState</code></td>
+        </tr>
+      </tbody>
+    </table>
+    <p>解耦（把缠在一起的代码拆开，互不认识也能合作）的关键：<strong>转换规则收进了状态类内部</strong>。"暂停时该切到已暂停"这条规矩写在 <code>PlayingState</code> 自己家里，别处一概不知——加新状态不用碰任何旧代码。</p>
+  </section>
+
+  <section class="card">
+    <h2>🗺️ 结构图（谁认识谁、谁调用谁）</h2>
+    <div class="diagram">
+      <div class="dbox key">AudioPlayer<small>上下文 · 传话筒，零 if-else</small></div>
+      <div class="darrow">转手<br><small>this.state.pause(this)</small></div>
+      <div class="dstack">
+        <div class="dbox">PlayingState<small>播放中</small></div>
+        <div class="dbox">PausedState<small>已暂停</small></div>
+        <div class="dbox">StoppedState<small>已停止</small></div>
+      </div>
+    </div>
+    <p class="dcaption">双向合作：AudioPlayer 把操作转给当前状态；状态干完活，回手调 player.setState(new XxxState()) 换下一位值班员。</p>
+  </section>
+
+  <section class="card">
+    <h2>🔄 运转步骤（跑一遍完整流程）</h2>
+    <ol class="steps">
+      <li><strong>开机</strong>：<code>new AudioPlayer()</code>，内部 <code>state</code> 初始为 <code>StoppedState</code>（已停止）。</li>
+      <li><strong>按播放</strong>：<code>player.play()</code> 转手调 <code>this.state.play(this)</code>——接电话的是 <code>StoppedState</code>，它打印"从头开始播放"，并回手 <code>player.setState(new PlayingState())</code>。</li>
+      <li><strong>按暂停</strong>：这次接电话的换成 <code>PlayingState</code>，它打印"暂停播放"，把班交给 <code>PausedState</code>。</li>
+      <li><strong>再按暂停</strong>：<code>PausedState</code> 在班上，只回一句"已经处于暂停状态"，什么都不换。</li>
+      <li><strong>继续玩</strong>：播放、停止轮流来，每次都是"当前在班的状态"说了算，同样的按键走出不同的结果。</li>
+      <li><strong>回头看</strong>：从头到尾 <code>AudioPlayer</code> 里没有出现一个 <code>if (state === ...)</code>。</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>🔍 代码走读</h2>
+    <p>下面是本仓库 TypeScript 实现的骨架（完整版见 <a href="../ts/state/main.ts">ts/state/main.ts</a>，有删减）：</p>
+    <div class="code-header">ts/state/main.ts（简化）</div>
+    <pre><code>// 状态接口：约定每种状态都要会处理的三件事
+interface PlayerState {
+  readonly name: string;
+  play(player: AudioPlayer): void;
+  pause(player: AudioPlayer): void;
+  stop(player: AudioPlayer): void;
+}
+
+// 具体状态：只管"我这种状态下"该怎么反应
+class PlayingState implements PlayerState {
+  readonly name = "播放中";
+
+  pause(player: AudioPlayer): void {
+    console.log("暂停播放");
+    player.setState(new PausedState());  // 状态自己决定下一个状态
+  }
+  // play / stop 同理，此处省略
+}
+
+// 上下文：一个纯传话筒，没有任何 if-else
+class AudioPlayer {
+  private state: PlayerState = new StoppedState();
+
+  setState(state: PlayerState): void {   // 状态回手换班的唯一入口
+    this.state = state;
+  }
+
+  pause(): void { this.state.pause(this); }  // 谁在班上谁处理
+}</code></pre>
+    <div class="callout tip">
+      <p class="callout-title">看懂这段代码，就看懂了整个模式</p>
+      <p>核心就两下：<strong>上下文把操作连同自己一起递给当前状态（<code>this.state.pause(this)</code>），状态干完活回手 <code>setState()</code> 换班</strong>。九个 if 分支变成三个各司其职的小类，转换规矩再也不会散落一地。</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚖️ 什么时候用，什么时候别用</h2>
+    <div class="two-col">
+      <div>
+        <h3>✅ 适合的场景</h3>
+        <ul class="checklist good">
+          <li>一个对象有几个明确的状态，<strong>同一操作在不同状态下反应不同</strong>（播放器、订单流转、审批单）</li>
+          <li>代码里已经长出<strong>判断状态的巨型 if-else / switch</strong></li>
+          <li>想把"状态之间怎么流转"的规则收拢到一处，显式写清楚</li>
+        </ul>
+      </div>
+      <div>
+        <h3>❌ 不适合的场景</h3>
+        <ul class="checklist bad">
+          <li>就两三个状态、行为差异很小——一个布尔判断更省事</li>
+          <li>状态基本不切换，或者每种状态下行为都一样——硬上状态类是脱裤子放屁</li>
+          <li>状态要掏上下文一大堆内部数据——可能拆错了单元，先回头想想怎么分</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚠️ 容易踩的坑</h2>
+    <ul class="pitfalls">
+      <li><strong>状态类互相 new 成瘾 → 耦成一团</strong>。像本仓库这样状态类自己没有字段，全程序共用一个实例就够了（甚至做成单例），不必每次换班都 new。</li>
+      <li><strong>把转换规则全塞回上下文 → 模式退化成换皮 if-else</strong>。setState 的调用权应该交给状态类，上下文一旦开始判断"接下来该是谁"，就白重构了。</li>
+      <li><strong>状态对象里偷偷存数据 → 换班时数据错乱</strong>。状态类应该是"无状态"的（只描述行为不存业务数据），本仓库三个状态类就一个字段都没有。</li>
+      <li><strong>非法操作被默默吞掉</strong>。已停止时按暂停，<code>StoppedState</code> 明确回一句"已停止，无法暂停"——该拒绝就明说，装聋作哑的 bug 最难查。</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>🔗 和其他模式的关系</h2>
+    <ul>
+      <li>和<strong><a href="strategy.html">策略模式</a></strong>是结构上的双胞胎，差别在意图：<strong>策略是你主动挑一把工具（换不换你说了算），状态是当前状态推着你走（换班由状态自己接力）</strong>。</li>
+      <li>"状态变了"常常要广播给界面刷新，正好接上<strong><a href="observer.html">观察者模式</a></strong>：状态一切换，订阅者自动收到通知。</li>
+      <li>无字段的状态类全程序只需一份，可以配合<strong><a href="singleton.html">单例模式</a></strong>共享实例，省掉反复创建。</li>
+    </ul>
+  </section>
+
+  <div class="remember">
+    <span class="remember-label">一 句 话 记 住 它</span>
+    <strong>谁在班上谁接电话——同一个按键，换个状态就是换种反应。</strong>
+  </div>
+
+  <section class="card">
+    <h2>📦 本仓库 9 种语言实现</h2>
+    <p>同一个音频播放器的例子，用 9 种语言各写了一遍，挑一个你顺手的对照着看：</p>
+    <div class="lang-links">
+      <a class="pill" href="../cpp/state/README.md">C++</a>
+      <a class="pill" href="../go/state/README.md">Go</a>
+      <a class="pill" href="../java/state/README.md">Java</a>
+      <a class="pill" href="../js/state/README.md">JavaScript</a>
+      <a class="pill" href="../objc/state/README.md">Objective-C</a>
+      <a class="pill" href="../python/state/README.md">Python</a>
+      <a class="pill" href="../rust/state/README.md">Rust</a>
+      <a class="pill" href="../swift/state/README.md">Swift</a>
+      <a class="pill" href="../ts/state/README.md">TypeScript</a>
+    </div>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="observer.html"><span class="nav-label">← 上一个</span><span class="nav-title">观察者模式</span></a>
+    <a class="next" href="strategy.html"><span class="nav-label">下一个 →</span><span class="nav-title">策略模式</span></a>
+  </nav>
+
+</main>
+
+<footer class="site-footer">
+  <p>GoF 设计模式 · 大白话图解 —— 配套 <a href="../README.md">GoF 多语言实现仓库</a>（9 种语言 × 23 个模式）</p>
+</footer>
+
+</body>
+</html>

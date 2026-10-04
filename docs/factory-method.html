@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>工厂方法模式 · Factory Method — GoF 设计模式大白话</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-category="creational">
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="index.html">📐 GoF 设计模式 · 大白话图解</a>
+    <nav class="crumbs">
+      <a href="index.html">首页</a><span>/</span>
+      <a href="index.html#creational">创建型</a><span>/</span>
+      <span class="current">工厂方法</span>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <section class="pattern-hero">
+    <span class="badge">创建型</span>
+    <h1>工厂方法模式 <small>Factory Method</small></h1>
+    <p class="one-liner">一句话：<strong>"造哪个"这件事父类不定死，留个空让子类自己填。</strong></p>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="builder.html"><span class="nav-label">← 上一个</span><span class="nav-title">建造者模式</span></a>
+    <a class="next" href="prototype.html"><span class="nav-label">下一个 →</span><span class="nav-title">原型模式</span></a>
+  </nav>
+
+  <section class="card">
+    <h2>🌰 生活里的例子</h2>
+    <div class="callout analogy">
+      <p class="callout-title">连锁快递的总部与网点</p>
+      <p>你在 App 上下单，总部有一套<strong>写死的流程</strong>：接单 → 派车 → 取件 → 送达。但"派车"这一步总部<strong>故意留空</strong>：市区网点派电动车，郊区网点派卡车，海岛网点干脆派船。你寄同一个快递到不同地方，走的流程一模一样，跑腿的车却由各地网点自己定。</p>
+      <p>总部只立了规矩："每个网点必须能派出一辆会送货车。"至于是烧油还是烧电、走公路还是走海路，网点说了算。</p>
+    </div>
+    <p>对应到模式里：<strong>总部的流程</strong>是 <code>Logistics.planDelivery()</code>（抽象创建者的公共方法），<strong>留空的"派车"</strong>就是工厂方法 <code>createTransport()</code>，<strong>各地网点</strong>是具体创建者（RoadLogistics、SeaLogistics），<strong>车</strong>是具体产品（Truck、Ship）。</p>
+  </section>
+
+  <section class="card">
+    <h2>😖 没有它会怎样</h2>
+    <p>本仓库的示例是<strong>物流系统</strong>：不管陆运海运，"规划配送"的流程是一样的，只有用的运输工具不同。最直接的写法，是在公共流程里现场判断类型：</p>
+    <div class="callout pain">
+      <p class="callout-title">直来直去的写法（问题代码）</p>
+      <p><code>planDelivery()</code> 里写：</p>
+      <p><code>if (type === "road") t = new Truck();</code><br>
+      <code>else if (type === "sea") t = new Ship();</code></p>
+      <p>以后每加一种运输方式，就回来加一个分支。</p>
+    </div>
+    <p>这样写的麻烦：</p>
+    <ul>
+      <li><strong>每加一种运输方式就得改公共流程</strong>：空运、铁路、无人机……改一次流程，所有路线都得重新测一遍。</li>
+      <li><strong>"流程"和"选车"缠在一个函数里</strong>：想单独复用流程？甩不掉那一坨 if。</li>
+      <li><strong>判断逻辑到处复制</strong>：十个地方都要"拿一辆车"，就抄十段 if，改漏一处就是 bug。</li>
+    </ul>
+    <p>根子上的问题是<strong>选择权攥在了流程手里</strong>，而它本该下放给"专门负责造车的人"。</p>
+  </section>
+
+  <section class="card">
+    <h2>👥 角色构成（这个模式由几块拼成）</h2>
+    <table>
+      <thead>
+        <tr><th>角色</th><th>大白话职责</th><th>本仓库示例里是谁</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>抽象产品 Product</strong></td>
+          <td>立合同："是运输工具，就得会送货。"</td>
+          <td><code>Transport</code> 接口</td>
+        </tr>
+        <tr>
+          <td><strong>具体产品</strong></td>
+          <td>真正跑腿的：卡车、轮船。</td>
+          <td><code>Truck</code>、<code>Ship</code></td>
+        </tr>
+        <tr>
+          <td><strong>抽象创建者 Creator</strong></td>
+          <td>流程骨架写死，中间挖一个"造车"的空。</td>
+          <td><code>Logistics</code> 抽象类（<code>planDelivery()</code>）</td>
+        </tr>
+        <tr>
+          <td><strong>工厂方法</strong></td>
+          <td>那个空本身，专门负责"造出产品"这一个动作。</td>
+          <td><code>createTransport()</code></td>
+        </tr>
+        <tr>
+          <td><strong>具体创建者</strong></td>
+          <td>子类只干一件事：把空填上，返回自己族的产品。</td>
+          <td><code>RoadLogistics</code>、<code>SeaLogistics</code></td>
+        </tr>
+      </tbody>
+    </table>
+    <p>解耦关键：<strong><code>planDelivery()</code> 只认识 <code>Transport</code> 接口，不认识卡车轮船任何一辆车</strong>。以后新增运输方式 = 新增一对子类，公共流程零改动——这就是开闭原则（对扩展开门，对修改关门）落地的样子。</p>
+  </section>
+
+  <section class="card">
+    <h2>🗺️ 结构图（谁认识谁、谁调用谁）</h2>
+    <div class="diagram">
+      <div class="dbox key">Logistics<small>抽象创建者 · planDelivery() 流程固定</small></div>
+      <div class="darrow">预留空位<br>createTransport()<br><small>子类来填空</small></div>
+      <div class="dstack">
+        <div class="dbox">RoadLogistics<small>填空：return new Truck()</small></div>
+        <div class="dbox">SeaLogistics<small>填空：return new Ship()</small></div>
+      </div>
+    </div>
+    <p class="dcaption">箭头方向 = 调用方向：客户端只 new 一个具体创建者、调 planDelivery()；父类流程"回头调用"子类填空的结果——这就是"把决定权延迟到子类"。</p>
+  </section>
+
+  <section class="card">
+    <h2>🔄 运转步骤（跑一遍完整流程）</h2>
+    <ol class="steps">
+      <li><strong>选网点</strong>：<code>new RoadLogistics()</code>，决定这条线路归谁管。</li>
+      <li><strong>启动流程</strong>：调 <code>planDelivery()</code>，这套流程是父类 <code>Logistics</code> 写死的，所有网点共用。</li>
+      <li><strong>跑到空位</strong>：流程内部调 <code>this.createTransport()</code>——一个抽象方法，父类自己不实现。</li>
+      <li><strong>子类填空</strong>：<code>RoadLogistics</code> 的实现返回 <code>new Truck()</code>，运力到位。</li>
+      <li><strong>干活</strong>：流程拿到 <code>Transport</code> 后立刻调 <code>deliver()</code>，从头到尾不知道也不关心它是卡车还是轮船。</li>
+      <li><strong>扩路线</strong>：明天要空运？新加 <code>AirLogistics</code> 和 <code>Plane</code> 两个类，老代码一行不动。</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>🔍 代码走读</h2>
+    <p>下面是本仓库 TypeScript 实现的骨架（完整版见 <a href="../ts/factory-method/main.ts">ts/factory-method/main.ts</a>，有删减）：</p>
+    <div class="code-header">ts/factory-method/main.ts（简化）</div>
+    <pre><code>// 抽象产品：立合同，"运输工具都得会送货"
+interface Transport {
+  deliver(): string;
+}
+
+// 具体产品：真正跑腿的
+class Truck implements Transport {
+  deliver(): string { return "使用卡车经陆路运输货物"; }
+}
+class Ship implements Transport {
+  deliver(): string { return "使用轮船经海路运输货物"; }
+}
+
+// 抽象创建者：流程写死在这里，"造哪个车"留给子类
+abstract class Logistics {
+  protected abstract createTransport(): Transport;  // 工厂方法（空位）
+
+  planDelivery(): string {              // 公共流程，与具体车型无关
+    const transport = this.createTransport();
+    return `[规划配送] ${transport.deliver()}`;
+  }
+}
+
+// 具体创建者：只回答"用什么车"这一个问题
+class RoadLogistics extends Logistics {
+  protected createTransport(): Transport { return new Truck(); }
+}
+class SeaLogistics extends Logistics {
+  protected createTransport(): Transport { return new Ship(); }
+}</code></pre>
+    <div class="callout tip">
+      <p class="callout-title">看懂这段代码，就看懂了整个模式</p>
+      <p>整个模式的核心画面就一句话：<strong>父类流程里留了一个"造产品"的空方法，子类负责填</strong>。<code>planDelivery()</code> 全程只见 <code>Transport</code> 接口，所以加多少种车它都不用改。</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚖️ 什么时候用，什么时候别用</h2>
+    <div class="two-col">
+      <div>
+        <h3>✅ 适合的场景</h3>
+        <ul class="checklist good">
+          <li>"该造哪个具体类"要<strong>由子类在运行时说了算</strong>，父类定不了</li>
+          <li>有一套<strong>与产品无关的公共流程</strong>要复用（本例的规划配送）</li>
+          <li>希望新增产品时<strong>只加类、不改旧代码</strong>（开闭原则）</li>
+        </ul>
+      </div>
+      <div>
+        <h3>❌ 不适合的场景</h3>
+        <ul class="checklist bad">
+          <li>只有一种实现、 foreseeable 也不会变——直接 new 就完了</li>
+          <li>产品选择用一两个分支就能搞定、且不会膨胀——别硬造四层类</li>
+          <li>只是想封装一下 new、根本不需要子类体系——一个工厂函数就够</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚠️ 容易踩的坑</h2>
+    <ul class="pitfalls">
+      <li><strong>类爆炸</strong>。每种产品都要配一个创建者子类，产品一多，文件数量直接翻倍，目录看着就头大。</li>
+      <li><strong>和"简单工厂"搞混</strong>。简单工厂是一个类里写 if/switch 选产品；工厂方法没有 if，是把选择权通过继承下放给子类。两者不是一回事。</li>
+      <li><strong>父类流程的隐含契约</strong>。子类返回的产品必须真能干活（有 <code>deliver()</code> 的完整实现），返回个半成品流程照样跑，锅在运行时才爆。</li>
+      <li><strong>为了"消灭 if"而用</strong>。分支就两三个、且稳定不变时，直接写 if 反而最清楚，套模式属于过度设计。</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>🔗 和其他模式的关系</h2>
+    <ul>
+      <li>和<strong><a href="abstract-factory.html">抽象工厂模式</a></strong>的区别是面试必考：工厂方法靠继承、造"一个"产品；抽象工厂靠组合（把工厂对象传进来）、造"一族"产品。</li>
+      <li><code>planDelivery()</code> 这种"骨架写死、细节留空"的写法，就是<strong><a href="template-method.html">模板方法模式</a></strong>的味道，两者经常成对出现。</li>
+      <li>工厂方法内部可以改用克隆来"造"产品：持有一份原型，每次返回 <code>clone()</code>——这是和<strong><a href="prototype.html">原型模式</a></strong>的常见合体方式。</li>
+    </ul>
+  </section>
+
+  <div class="remember">
+    <span class="remember-label">一 句 话 记 住 它</span>
+    <strong>流程爸爸定死，"造啥"留个空让儿子填。</strong>
+  </div>
+
+  <section class="card">
+    <h2>📦 本仓库 9 种语言实现</h2>
+    <p>同一个物流系统的例子，用 9 种语言各写了一遍，挑一个你顺手的对照着看：</p>
+    <div class="lang-links">
+      <a class="pill" href="../cpp/factory-method/README.md">C++</a>
+      <a class="pill" href="../go/factory-method/README.md">Go</a>
+      <a class="pill" href="../java/factory-method/README.md">Java</a>
+      <a class="pill" href="../js/factory-method/README.md">JavaScript</a>
+      <a class="pill" href="../objc/factory-method/README.md">Objective-C</a>
+      <a class="pill" href="../python/factory-method/README.md">Python</a>
+      <a class="pill" href="../rust/factory-method/README.md">Rust</a>
+      <a class="pill" href="../swift/factory-method/README.md">Swift</a>
+      <a class="pill" href="../ts/factory-method/README.md">TypeScript</a>
+    </div>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="builder.html"><span class="nav-label">← 上一个</span><span class="nav-title">建造者模式</span></a>
+    <a class="next" href="prototype.html"><span class="nav-label">下一个 →</span><span class="nav-title">原型模式</span></a>
+  </nav>
+
+</main>
+
+<footer class="site-footer">
+  <p>GoF 设计模式 · 大白话图解 —— 配套 <a href="../README.md">GoF 多语言实现仓库</a>（9 种语言 × 23 个模式）</p>
+</footer>
+
+</body>
+</html>

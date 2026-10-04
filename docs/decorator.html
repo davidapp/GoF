@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>装饰器模式 · Decorator — GoF 设计模式大白话</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-category="structural">
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="index.html">📐 GoF 设计模式 · 大白话图解</a>
+    <nav class="crumbs">
+      <a href="index.html">首页</a><span>/</span>
+      <a href="index.html#structural">结构型</a><span>/</span>
+      <span class="current">装饰器</span>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <section class="pattern-hero">
+    <span class="badge">结构型</span>
+    <h1>装饰器模式 <small>Decorator</small></h1>
+    <p class="one-liner">一句话：<strong>像穿衣服：本体一个字不改，一层层往外套，每套一层加一点本事，随时可穿可脱。</strong></p>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="composite.html"><span class="nav-label">← 上一个</span><span class="nav-title">组合模式</span></a>
+    <a class="next" href="facade.html"><span class="nav-label">下一个 →</span><span class="nav-title">外观模式</span></a>
+  </nav>
+
+  <section class="card">
+    <h2>🌰 生活里的例子</h2>
+    <div class="callout analogy">
+      <p class="callout-title">冬天出门穿衣服</p>
+      <p>你要出门（客户端调用）。出门前先穿上打底（本体），觉得冷，套件毛衣（装饰器一层）；还是冷，再套件羽绒服（装饰器又一层）；下雨了，最外面再罩件雨衣（第三层）。</p>
+      <p>注意两个细节：<strong>你还是你</strong>，穿再多衣服，出门的还是这个人，接口没变；<strong>每件衣服只管加自己那点功能</strong>——毛衣不管防雨，雨衣不管保暖，谁也不掺和谁的活。</p>
+    </div>
+    <p>对应到模式里：<strong>打底是"具体组件"，每件衣服是一个"装饰器"，"我这个人"就是大家共享的接口</strong>。想加功能就多套一层，想换搭配就换个穿法，衣柜（类库）本身不用重新生产。</p>
+  </section>
+
+  <section class="card">
+    <h2>😖 没有它会怎样</h2>
+    <p>本仓库的例子是咖啡定价：一杯 Espresso 18 元，可以加牛奶 +4、糖浆 +2、奶油 +6。如果靠继承给每种搭配造一个类：</p>
+    <div class="callout pain">
+      <p class="callout-title">直来直去的写法（问题代码）</p>
+      <p>为每种组合各生一个子类：</p>
+      <p><code>Espresso</code>、<code>EspressoWithMilk</code>、<code>EspressoWithSugar</code>、<code>EspressoWithMilkAndSugar</code>、<code>EspressoWithDoubleMilkAndCream</code> ……</p>
+    </div>
+    <p>三种配料就有 8 种组合，麻烦在后头：</p>
+    <ul>
+      <li><strong>每加一种配料，子类数量直接翻倍</strong>——这是乘法，不是加法，越长越吓人。</li>
+      <li><strong>搭配是写死在类型里的</strong>，客人说"奶油去掉"？做不到，只能整个换一种类重新点。</li>
+      <li>价格、描述两套逻辑在十几个子类里抄来抄去，<strong>改个牛奶价钱要动一半的类</strong>。</li>
+    </ul>
+    <p>根子上的问题是：<strong>把"组合"当成了"种类"去继承</strong>，而组合是运行时随手拼的事。</p>
+  </section>
+
+  <section class="card">
+    <h2>👥 角色构成（这个模式由几块拼成）</h2>
+    <table>
+      <thead>
+        <tr><th>角色</th><th>大白话职责</th><th>本仓库示例里是谁</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>组件 Component</strong></td>
+          <td>共同身份：定下"是一杯咖啡"就得会算钱、会自报配料。</td>
+          <td><code>Coffee</code> 接口（<code>cost</code> / <code>description</code>）</td>
+        </tr>
+        <tr>
+          <td><strong>具体组件</strong></td>
+          <td>被包装的本体：打底那件，什么料都没加。</td>
+          <td><code>Espresso</code>（18 元）</td>
+        </tr>
+        <tr>
+          <td><strong>抽象装饰器</strong></td>
+          <td>关键中间层：自己实现 <code>Coffee</code>，怀里又揣一个 <code>Coffee</code>，默认原样转发——衣服的"通用版型"。</td>
+          <td><code>CoffeeDecorator</code></td>
+        </tr>
+        <tr>
+          <td><strong>具体装饰器</strong></td>
+          <td>各种料：在转发的基础上加自己的价钱和名字，每件只管自己。</td>
+          <td><code>MilkDecorator</code>、<code>SugarDecorator</code>、<code>WhippedCreamDecorator</code></td>
+        </tr>
+      </tbody>
+    </table>
+    <p>解耦（把缠在一起的代码拆开，互不认识也能合作）关键在：<strong>装饰器和本体实现同一个接口</strong>——所以装饰器怀里揣的既可以是本体，也可以是另一个装饰器（毛衣外面套羽绒服）；而客户端拿到的永远是 <code>Coffee</code>，包了三层它也察觉不到，更不关心。</p>
+  </section>
+
+  <section class="card">
+    <h2>🗺️ 结构图（谁认识谁、谁调用谁）</h2>
+    <div class="diagram">
+      <div class="dbox">客户端<small>只拿到最外层的 Coffee</small></div>
+      <div class="darrow">调用<br><small>cost() / description()</small></div>
+      <div class="dstack">
+        <div class="dbox key">SugarDecorator<small>装饰器 · +2 糖浆</small></div>
+        <div class="darrow">↓ 委托<br><small>super.cost() 再加钱</small></div>
+        <div class="dbox key">MilkDecorator<small>装饰器 · +4 牛奶</small></div>
+        <div class="darrow">↓ 委托<br><small>super.cost() 再加钱</small></div>
+        <div class="dbox">Espresso<small>具体组件 · 18 元</small></div>
+      </div>
+    </div>
+    <p class="dcaption">调用从最外层钻进去，像剥洋葱一样一层层往里传，结果再一层层加出来——每一层只认识"怀里的那个 Coffee"，不认识整条链。</p>
+  </section>
+
+  <section class="card">
+    <h2>🔄 运转步骤（跑一遍完整流程）</h2>
+    <ol class="steps">
+      <li><strong>点本体</strong>：<code>order = new Espresso()</code>，此刻 18 元，描述"Espresso"。</li>
+      <li><strong>套一层</strong>：<code>order = new MilkDecorator(order)</code>——注意套的还是刚才那个 order，现在它 22 元。</li>
+      <li><strong>再套</strong>：<code>order = new SugarDecorator(order)</code>，24 元；喜欢的话还能接着套奶油。</li>
+      <li><strong>调用</strong>：<code>order.cost()</code> 从最外层进入，糖浆先问牛奶"你多少？"，牛奶再问咖啡"你多少？"。</li>
+      <li><strong>层层加价</strong>：咖啡答 18，牛奶加 4 报 22，糖浆加 2 报 24——一层层传回来，账算完了；<code>description()</code> 同理拼出"Espresso + 牛奶 + 糖浆"。</li>
+      <li><strong>互不干扰</strong>：另点一杯双糖，<code>new SugarDecorator(new SugarDecorator(new Espresso()))</code>，原来那杯单子纹丝不动。</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>🔍 代码走读</h2>
+    <p>下面是本仓库 TypeScript 实现的骨架（完整版见 <a href="../ts/decorator/main.ts">ts/decorator/main.ts</a>，有删减）：</p>
+    <div class="code-header">ts/decorator/main.ts（简化）</div>
+    <pre><code>// 组件接口：一杯咖啡会算钱、会自报家门
+interface Coffee {
+  cost(): number;
+  description(): string;
+}
+
+// 具体组件：打底的 Espresso
+class Espresso implements Coffee {
+  cost() { return 18; }
+  description() { return "Espresso"; }
+}
+
+// 抽象装饰器：自己也实现 Coffee，怀里再揣一个 Coffee，默认原样转发
+abstract class CoffeeDecorator implements Coffee {
+  constructor(protected readonly coffee: Coffee) {}
+  cost() { return this.coffee.cost(); }
+  description() { return this.coffee.description(); }
+}
+
+// 具体装饰器：在转发的基础上加自己的料
+class MilkDecorator extends CoffeeDecorator {
+  cost() { return super.cost() + 4; } // 里层价格 + 4
+  description() { return `${super.description()} + 牛奶`; }
+}
+
+class SugarDecorator extends CoffeeDecorator {
+  cost() { return super.cost() + 2; }
+  description() { return `${super.description()} + 糖浆`; }
+}
+
+// 层层包裹：Espresso -> 加奶 -> 加糖，拿到的还是 Coffee
+let order: Coffee = new Espresso();
+order = new MilkDecorator(order);
+order = new SugarDecorator(order);
+console.log(order.description(), order.cost()); // 24 元</code></pre>
+    <div class="callout tip">
+      <p class="callout-title">看懂这段代码，就看懂了整个模式</p>
+      <p>全部秘密在抽象装饰器那三行：<strong>实现同一接口 + 持有同接口引用 + 默认转发</strong>。正因为"装饰器也是 Coffee"，它才能包住任何 Coffee，包括另一个装饰器——套娃合法了。</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚖️ 什么时候用，什么时候别用</h2>
+    <div class="two-col">
+      <div>
+        <h3>✅ 适合的场景</h3>
+        <ul class="checklist good">
+          <li>想<strong>运行时动态增减职责</strong>：加料、加缓存、加日志、加重试，套一层的事</li>
+          <li>职责的组合方式很多，<strong>用继承会子类爆炸</strong>（本例 3 种料 8 种组合）</li>
+          <li>不能或不想改原类（类是 <code>final</code> 的、第三方提供的）</li>
+        </ul>
+      </div>
+      <div>
+        <h3>❌ 不适合的场景</h3>
+        <ul class="checklist bad">
+          <li>搭配就固定一两种——直接继承一个子类，反而一眼看穿</li>
+          <li>代码里靠 <code>instanceof</code> 认"真实类型"——包装后认不出本体，逻辑会翻车</li>
+          <li>各层职责互相依赖、顺序极度敏感——调试地狱，不如老老实实写清楚</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚠️ 容易踩的坑</h2>
+    <ul class="pitfalls">
+      <li><strong>装饰顺序敏感</strong>。先打折再加税和先加税再打折，账差一截。本例价格是加法所以没事，但描述的先后顺序还是不一样——顺序有语义时要当心。</li>
+      <li><strong>调试像剥洋葱</strong>。断点打进去，类型是一长串包装，看不出本体是什么；日志里多打几层描述能救命。</li>
+      <li><strong>和 TS 的 @decorator 搞混</strong>。那是语言级语法（编译期改类定义），GoF 装饰器是运行时对象包装，同名不同物。</li>
+      <li><strong>装饰器里写死了本体类型</strong>。怀里只肯揣 <code>Espresso</code> 不肯揣 <code>Coffee</code>——套娃直接断了，模式废掉。</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>🔗 和其他模式的关系</h2>
+    <ul>
+      <li>和<strong><a href="proxy.html">代理模式</a></strong>是结构双胞胎：都是"同接口 + 持引用 + 转发"。区别在意图——<strong>装饰器是主动叠加职责、可以多层；代理是控制访问、通常一层，客户端还不知道有真身</strong>。</li>
+      <li>和<strong><a href="composite.html">组合模式</a></strong>是一家：装饰器是"包一个"，组合是"装一群"，都靠"实现同一接口"让外界无感。</li>
+      <li>如果只是"同一件事换种做法"而不是"往上叠加"，用<strong><a href="strategy.html">策略模式</a></strong>更省事。</li>
+    </ul>
+  </section>
+
+  <div class="remember">
+    <span class="remember-label">一 句 话 记 住 它</span>
+    <strong>本体不动，一层层套：每层加点料，脱掉也不伤身。</strong>
+  </div>
+
+  <section class="card">
+    <h2>📦 本仓库 9 种语言实现</h2>
+    <p>同一杯咖啡层层加料的例子，用 9 种语言各写了一遍，挑一个你顺手的对照着看：</p>
+    <div class="lang-links">
+      <a class="pill" href="../cpp/decorator/README.md">C++</a>
+      <a class="pill" href="../go/decorator/README.md">Go</a>
+      <a class="pill" href="../java/decorator/README.md">Java</a>
+      <a class="pill" href="../js/decorator/README.md">JavaScript</a>
+      <a class="pill" href="../objc/decorator/README.md">Objective-C</a>
+      <a class="pill" href="../python/decorator/README.md">Python</a>
+      <a class="pill" href="../rust/decorator/README.md">Rust</a>
+      <a class="pill" href="../swift/decorator/README.md">Swift</a>
+      <a class="pill" href="../ts/decorator/README.md">TypeScript</a>
+    </div>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="composite.html"><span class="nav-label">← 上一个</span><span class="nav-title">组合模式</span></a>
+    <a class="next" href="facade.html"><span class="nav-label">下一个 →</span><span class="nav-title">外观模式</span></a>
+  </nav>
+
+</main>
+
+<footer class="site-footer">
+  <p>GoF 设计模式 · 大白话图解 —— 配套 <a href="../README.md">GoF 多语言实现仓库</a>（9 种语言 × 23 个模式）</p>
+</footer>
+
+</body>
+</html>

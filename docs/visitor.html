@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>访问者模式 · Visitor — GoF 设计模式大白话</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-category="behavioral">
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="index.html">📐 GoF 设计模式 · 大白话图解</a>
+    <nav class="crumbs">
+      <a href="index.html">首页</a><span>/</span>
+      <a href="index.html#behavioral">行为型</a><span>/</span>
+      <span class="current">访问者</span>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <section class="pattern-hero">
+    <span class="badge">行为型</span>
+    <h1>访问者模式 <small>Visitor</small></h1>
+    <p class="one-liner">一句话：<strong>把"对一堆对象做的操作"整个搬到外面的访问者对象里——原来的类一行不改，就能天天加新操作。</strong></p>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="template-method.html"><span class="nav-label">← 上一个</span><span class="nav-title">模板方法模式</span></a>
+    <a class="next" href="index.html"><span class="nav-label">总览 →</span><span class="nav-title">返回首页</span></a>
+  </nav>
+
+  <section class="card">
+    <h2>🌰 生活里的例子</h2>
+    <div class="callout analogy">
+      <p class="callout-title">医院病房查房</p>
+      <p>病房里住着一排<strong>病人</strong>：有的是骨科的，有的是眼科的。今天<strong>抽血队</strong>来查房，见到骨科病人按骨科的流程抽，见到眼科病人按眼科的流程抽；明天换成<strong>拍片队</strong>，还是这批病人，流程又换成拍片的。</p>
+      <p>注意一个细节：<strong>病人从头到尾没换过病房、没改过病历</strong>，他们只做一件事——配合检查，并亮明身份"我是骨科的"。至于"见到骨科病人该干什么"，那是查房队自己的事：抽血队有一套，拍片队有另一套。</p>
+    </div>
+    <p>对应到模式里：<strong>病人是"元素"（各自亮身份），病房是"对象结构"，查房队是"访问者"——每支队伍身上带着"见到每种病人该怎么办"的一整套规程</strong>。换一支队伍，就是换一种操作，病人自己毫发无损。</p>
+  </section>
+
+  <section class="card">
+    <h2>😖 没有它会怎样</h2>
+    <p>本仓库的例子是一组图形：<code>Circle</code>（圆）和 <code>Rectangle</code>（矩形）混在一个数组里，想对它们"求面积"。最直接的写法：遍历时挨个问"你是谁"。</p>
+    <div class="callout pain">
+      <p class="callout-title">直来直去的写法（问题代码）</p>
+      <p>用 instanceof 链一个个认：</p>
+      <p><code>if (s instanceof Circle) total += Math.PI * s.radius ** 2;</code><br>
+      <code>else if (s instanceof Rectangle) total += s.width * s.height;</code> ……</p>
+      <p>过两天要加"渲染绘制"？再抄一遍这条 instanceof 链，里面换成画图的代码。</p>
+    </div>
+    <p>每加一种操作就抄一遍判断链，越抄越糟：</p>
+    <ul>
+      <li><strong>判断链到处复制</strong>：求面积一份、渲染一份、导出又一份，全散在客户端代码里，改个判断要改 N 处。</li>
+      <li><strong>想把操作写进图形类里？改不动</strong>：<code>Circle</code>、<code>Rectangle</code> 若是别人维护的库代码，你根本无权往里加方法。</li>
+      <li><strong>新增一种图形就全城搜捕</strong>：加了"三角形"，所有操作里的 instanceof 链都得补一支，漏一处就悄悄算错。</li>
+    </ul>
+    <p>根子上的问题：<strong>操作和元素类型缠在了一起，还双向都不好改</strong>。访问者把"操作"整套搬出去集中管理，两头都松绑。</p>
+  </section>
+
+  <section class="card">
+    <h2>👥 角色构成（这个模式由几块拼成）</h2>
+    <table>
+      <thead>
+        <tr><th>角色</th><th>大白话职责</th><th>本仓库示例里是谁</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>元素接口 Element</strong></td>
+          <td>只要求会一件事：<code>accept(visitor)</code>——接待访问者，并把自己的真实身份交出去。</td>
+          <td><code>Shape</code> 接口</td>
+        </tr>
+        <tr>
+          <td><strong>具体元素</strong></td>
+          <td>被检查的人：在 <code>accept</code> 里点名叫访问者执行"针对我这种类型"的方法。</td>
+          <td><code>Circle</code>、<code>Rectangle</code></td>
+        </tr>
+        <tr>
+          <td><strong>访问者接口 Visitor</strong></td>
+          <td>查房规程：为<strong>每种</strong>具体元素各准备一个专属方法（见到圆怎么办、见到矩形怎么办）。</td>
+          <td><code>ShapeVisitor</code> 接口（<code>visitCircle</code> / <code>visitRectangle</code>）</td>
+        </tr>
+        <tr>
+          <td><strong>具体访问者</strong></td>
+          <td>一支支查房队：每支队伍把"一种操作 × 每种元素"的答案全部自带在身上。</td>
+          <td><code>AreaVisitor</code>、<code>DrawVisitor</code></td>
+        </tr>
+        <tr>
+          <td><strong>对象结构</strong></td>
+          <td>那间病房：一堆元素摆在一起，供访问者挨个走一遍。</td>
+          <td>演示里的 <code>shapes: Shape[]</code> 数组</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>解耦（把缠在一起的代码拆开，互不认识也能合作）的关键：<strong>靠"双分派"精确路由</strong>——第一次分派在 <code>accept()</code> 里确定"元素是哪种"，第二次在 <code>visitXxx()</code> 上确定"操作是哪种"，两者一组合就命中"类型 × 操作"的正确答案，全程不用一个 <code>instanceof</code>。</p>
+  </section>
+
+  <section class="card">
+    <h2>🗺️ 结构图（谁认识谁、谁调用谁）</h2>
+    <div class="diagram">
+      <div class="dbox">shapes: Shape[]<small>对象结构 · 一排图形</small></div>
+      <div class="darrow">挨个调 accept(v)<br><small>① 亮明自己是谁</small></div>
+      <div class="dstack">
+        <div class="dbox">Circle<small>圆 · 点名 visitCircle</small></div>
+        <div class="dbox">Rectangle<small>矩形 · 点名 visitRectangle</small></div>
+      </div>
+      <div class="darrow">visitor.visitXxx(this)<br><small>② 回手执行对应操作</small></div>
+      <div class="dstack">
+        <div class="dbox key">AreaVisitor<small>求面积</small></div>
+        <div class="dbox key">DrawVisitor<small>渲染绘制</small></div>
+      </div>
+    </div>
+    <p class="dcaption">两次分派：accept() 先确定"元素是哪种"，visitXxx() 再确定"操作是哪种"——换一支访问者队伍，就是换一种操作，图形类一行不改。</p>
+  </section>
+
+  <section class="card">
+    <h2>🔄 运转步骤（跑一遍完整流程）</h2>
+    <ol class="steps">
+      <li><strong>摆摊</strong>：准备 <code>shapes</code> 数组：<code>Circle(5)</code>、<code>Rectangle(4, 6)</code>、<code>Circle(2)</code>、<code>Rectangle(10, 3)</code> 混着放。</li>
+      <li><strong>请人</strong>：<code>new DrawVisitor()</code> 进场，先做渲染这支队伍。</li>
+      <li><strong>逐个接待</strong>：for 循环里每个 <code>shape.accept(drawVisitor)</code>——元素只负责接待。</li>
+      <li><strong>亮身份</strong>：<code>Circle</code> 的 <code>accept</code> 里调 <code>visitor.visitCircle(this)</code>，自己把类型报出来。</li>
+      <li><strong>干活</strong>：<code>DrawVisitor</code> 的 <code>visitCircle</code> 知道眼前是圆，打印"绘制 ○ 圆形，半径=5"；矩形同理。</li>
+      <li><strong>换人重来</strong>：换成 <code>AreaVisitor</code> 再遍历一遍，同样的 accept 流程，这次每个图形算出面积并累加出总面积——<strong>图形类一行没改</strong>。</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>🔍 代码走读</h2>
+    <p>下面是本仓库 TypeScript 实现的骨架（完整版见 <a href="../ts/visitor/main.ts">ts/visitor/main.ts</a>，有删减）：</p>
+    <div class="code-header">ts/visitor/main.ts（简化）</div>
+    <pre><code>// 访问者接口：为每种元素准备一个专属方法
+interface ShapeVisitor {
+  visitCircle(circle: Circle): void;
+  visitRectangle(rectangle: Rectangle): void;
+}
+
+// 元素接口 + 具体元素：唯一的本事是"亮明身份"
+interface Shape {
+  accept(visitor: ShapeVisitor): void;
+}
+
+class Circle implements Shape {
+  constructor(public readonly radius: number) {}
+
+  accept(visitor: ShapeVisitor): void {
+    visitor.visitCircle(this);   // 双分派：把具体类型交给访问者
+  }
+}
+
+// 具体访问者：求面积（想加新操作就再写一个访问者，图形类不动）
+class AreaVisitor implements ShapeVisitor {
+  private totalArea = 0;
+
+  visitCircle(circle: Circle): void {           // 圆有圆的算法
+    this.totalArea += Math.PI * circle.radius ** 2;
+  }
+
+  visitRectangle(rectangle: Rectangle): void {  // 矩形有矩形的算法
+    this.totalArea += rectangle.width * rectangle.height;
+  }
+}
+
+// 使用：同一组图形，换一个访问者就是换一种操作
+for (const shape of shapes) {
+  shape.accept(areaVisitor);    // 全程没有一个 instanceof
+}</code></pre>
+    <div class="callout tip">
+      <p class="callout-title">看懂这段代码，就看懂了整个模式</p>
+      <p>核心就一对手拉手的调用：<strong><code>shape.accept(visitor)</code> 进去，<code>visitor.visitCircle(this)</code> 出来</strong>。元素报类型、访问者接类型，两步接力之后，"求面积的圆"和"渲染的圆"各自找到各自的那段代码，谁也不用改谁。</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚖️ 什么时候用，什么时候别用</h2>
+    <div class="two-col">
+      <div>
+        <h3>✅ 适合的场景</h3>
+        <ul class="checklist good">
+          <li><strong>元素种类稳定</strong>（圆、矩形就这几种），<strong>操作经常加</strong>（求面积、渲染、导出、校验……）</li>
+          <li>不能或不想改元素类的代码——第三方库、别人维护的历史代码</li>
+          <li>同一个结构上要施加好几种互不相关的操作，想把每种操作各自收拢成一个类</li>
+        </ul>
+      </div>
+      <div>
+        <h3>❌ 不适合的场景</h3>
+        <ul class="checklist bad">
+          <li>元素种类还在频繁增加——每加一种元素，访问者接口和<strong>所有</strong>已有实现都得改，正好把长处反过来戳</li>
+          <li>元素就一两种、操作也就一个——直接写方法调用，三行搞定的事别请查房队</li>
+          <li>元素想把内部数据藏严实——访问者必须读到足够的数据（半径、宽高）才能干活，封装注定要开个大口子</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚠️ 容易踩的坑</h2>
+    <ul class="pitfalls">
+      <li><strong>元素类型一多，访问者先撑不住</strong>。十种图形 × 每个访问者十个方法，新增一种图形要改全体访问者——这就是本仓库 README 强调的前提："稳定元素、频繁扩展操作"，反过来就别用。</li>
+      <li><strong>双分派没走对，回头用 instanceof 糊弄</strong>。一旦在遍历里写起类型判断，模式就名存实亡，等于绕一圈回到老路。</li>
+      <li><strong>访问者顺手动了元素的状态</strong>。一支队伍跑完把图形数据改了，下一支队伍看到的就是脏数据——访问者应当只读不写（本仓库 <code>radius</code>、<code>width</code> 都是只读的）。</li>
+      <li><strong>新增元素时漏改某个旧访问者</strong>。运气好编译期报"接口没实现全"，运气差运行到那行才炸——改动时记得全量搜索所有访问者。</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>🔗 和其他模式的关系</h2>
+    <ul>
+      <li>和<strong><a href="iterator.html">迭代器模式</a></strong>是黄金搭档：迭代器负责"挨个走一遍"对象结构，访问者负责"走到每个元素身上干什么"，两边各司其职。</li>
+      <li>和<strong><a href="composite.html">组合模式</a></strong>的经典组合：树形结构（文件夹、UI 控件树）配上访问者，对整棵树上的各种节点统一施加操作。</li>
+      <li>和<strong><a href="decorator.html">装饰器模式</a></strong>都在给对象加行为：装饰器把行为"包"在对象外面、接口不变；访问者把操作整套搬到另一个对象里，靠双分派路由。</li>
+    </ul>
+  </section>
+
+  <div class="remember">
+    <span class="remember-label">一 句 话 记 住 它</span>
+    <strong>队伍原地不动，专家轮着上门：来了谁，就干谁的活。</strong>
+  </div>
+
+  <section class="card">
+    <h2>📦 本仓库 9 种语言实现</h2>
+    <p>同一组图形配两种访问者的例子，用 9 种语言各写了一遍，挑一个你顺手的对照着看：</p>
+    <div class="lang-links">
+      <a class="pill" href="../cpp/visitor/README.md">C++</a>
+      <a class="pill" href="../go/visitor/README.md">Go</a>
+      <a class="pill" href="../java/visitor/README.md">Java</a>
+      <a class="pill" href="../js/visitor/README.md">JavaScript</a>
+      <a class="pill" href="../objc/visitor/README.md">Objective-C</a>
+      <a class="pill" href="../python/visitor/README.md">Python</a>
+      <a class="pill" href="../rust/visitor/README.md">Rust</a>
+      <a class="pill" href="../swift/visitor/README.md">Swift</a>
+      <a class="pill" href="../ts/visitor/README.md">TypeScript</a>
+    </div>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="template-method.html"><span class="nav-label">← 上一个</span><span class="nav-title">模板方法模式</span></a>
+    <a class="next" href="index.html"><span class="nav-label">总览 →</span><span class="nav-title">返回首页</span></a>
+  </nav>
+
+</main>
+
+<footer class="site-footer">
+  <p>GoF 设计模式 · 大白话图解 —— 配套 <a href="../README.md">GoF 多语言实现仓库</a>（9 种语言 × 23 个模式）</p>
+</footer>
+
+</body>
+</html>

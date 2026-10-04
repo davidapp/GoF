@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>责任链模式 · Chain of Responsibility — GoF 设计模式大白话</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-category="behavioral">
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="index.html">📐 GoF 设计模式 · 大白话图解</a>
+    <nav class="crumbs">
+      <a href="index.html">首页</a><span>/</span>
+      <a href="index.html#behavioral">行为型</a><span>/</span>
+      <span class="current">责任链</span>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <section class="pattern-hero">
+    <span class="badge">行为型</span>
+    <h1>责任链模式 <small>Chain of Responsibility</small></h1>
+    <p class="one-liner">一句话：<strong>把几个处理者串成一条链，请求顺着链往下递，谁能办谁接手；发请求的人只管递出去，根本不用认识最后是谁办的。</strong></p>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="proxy.html"><span class="nav-label">← 上一个</span><span class="nav-title">代理模式</span></a>
+    <a class="next" href="command.html"><span class="nav-label">下一个 →</span><span class="nav-title">命令模式</span></a>
+  </nav>
+
+  <section class="card">
+    <h2>🌰 生活里的例子</h2>
+    <div class="callout analogy">
+      <p class="callout-title">打客服电话被层层转接</p>
+      <p>你家宽带出问题了，打客服电话。一线客服查了查：办不了，"帮您转技术组"；技术组检测完发现是线路老化，也办不了，"帮您转装维师傅"；最后师傅上门，事办成了。</p>
+      <p>整个过程你<strong>只拨了一个号码</strong>，根本不知道、也不关心最后是谁解决的。每一级客服只做两件事：<strong>能办就办，办不了转给下一级</strong>。</p>
+    </div>
+    <p>这个比喻对应模式里的什么：一线客服、技术组、师傅 = 链上的一个个<strong>处理者</strong>；"转接" = 处理者手里的<strong>下家引用</strong>（谁的下家是谁，接线时就连好了）；你 = <strong>发请求的客户端</strong>，只认识第一个接电话的人。</p>
+  </section>
+
+  <section class="card">
+    <h2>😖 没有它会怎样</h2>
+    <p>本仓库的场景是<strong>采购审批</strong>：金额小的经理批，大点的总监批，再大的 CEO 批。最直接的写法是在提交申请的地方堆一坨 if/else：</p>
+    <div class="callout pain">
+      <p class="callout-title">直来直去的写法（问题代码）</p>
+      <p>提交申请时挨个问一遍：</p>
+      <p><code>if (amount &lt;= 1000) managerApprove(r)</code> → <code>else if (amount &lt;= 10000) directorApprove(r)</code> → <code>else ceoApprove(r)</code> ……</p>
+    </div>
+    <p>这样写眼下能跑，但麻烦在后头：</p>
+    <ul>
+      <li><strong>审批规则一变就得改这里</strong>。经理上限涨到 2000？插入一个"副总监"？全得回来改 if/else，改漏一处就乱套。</li>
+      <li><strong>提交申请的代码被迫认识所有审批人</strong>，跟人事架构死死焊在一起——人事一动，代码跟着动。</li>
+      <li>同样的金额判断逻辑<strong>到处复制</strong>：网页端写一遍、审批流又写一遍，永远改不齐。</li>
+    </ul>
+    <p>根子上的问题是<strong>方向反了</strong>：不该让发请求的人决定"谁有资格处理"，应该让处理者们自己排好队，请求自己往下流。</p>
+  </section>
+
+  <section class="card">
+    <h2>👥 角色构成（这个模式由几块拼成）</h2>
+    <table>
+      <thead>
+        <tr><th>角色</th><th>大白话职责</th><th>本仓库示例里是谁</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>处理者 Handler</strong></td>
+          <td>定规矩的人："能办就办，办不了转给下家"。手里攥着下家的联系方式。</td>
+          <td><code>Approver</code> 抽象类</td>
+        </tr>
+        <tr>
+          <td><strong>具体处理者</strong></td>
+          <td>真正干活的。每人只需回答一个问题："多大金额我能批？"</td>
+          <td><code>Manager</code>（≤¥1,000）、<code>Director</code>（≤¥10,000）、<code>CEO</code>（无上限）</td>
+        </tr>
+        <tr>
+          <td><strong>请求</strong></td>
+          <td>沿链流动的数据包：这笔申请要多少钱、干什么用。</td>
+          <td><code>PurchaseRequest</code> 接口</td>
+        </tr>
+        <tr>
+          <td><strong>客户端</strong></td>
+          <td>只负责拼链 + 把请求交给链头，之后的事一概不知。</td>
+          <td><code>main()</code> 函数</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>解耦关键在哪：<strong>提交人只认识链头（Manager），每个审批者只认识自己的下家</strong>。想插入一个"副总监"？写个新类、重新 <code>setNext()</code> 拼一次链就行，<code>Approver</code> 和其他审批者一行代码都不用改——这就是解耦（把缠在一起的代码拆开，互不认识也能合作）。</p>
+  </section>
+
+  <section class="card">
+    <h2>🗺️ 结构图（谁认识谁、谁调用谁）</h2>
+    <div class="diagram">
+      <div class="dstack">
+        <div class="dbox">main 客户端<small>只认识链头</small></div>
+        <div class="darrow">↓<br><small>handle(request)</small></div>
+      </div>
+      <div class="dbox key">Manager<small>部门经理 · 上限 ¥1,000</small></div>
+      <div class="darrow">→<br><small>办不了<br>转交上级</small></div>
+      <div class="dbox">Director<small>总监 · 上限 ¥10,000</small></div>
+      <div class="darrow">→<br><small>办不了<br>转交上级</small></div>
+      <div class="dbox">CEO<small>链尾兜底 · 无上限</small></div>
+    </div>
+    <p class="dcaption">每个箭头都是一句"我权限不够，交给你"。谁也不认识整条链，只认识自己的下家；一路传到链尾还没人能办，就要明确"拒绝"，不能让申请悄悄消失。</p>
+  </section>
+
+  <section class="card">
+    <h2>🔄 运转步骤（跑一遍完整流程）</h2>
+    <ol class="steps">
+      <li><strong>拼链</strong>：<code>manager.setNext(director).setNext(ceo)</code>，三级审批链连好了（setNext 返回下家，正好链式写）。</li>
+      <li><strong>提交</strong>：一笔"办公用品采购 ¥500"交给链头 <code>manager.handle(request)</code>。</li>
+      <li><strong>经理接手</strong>：500 ≤ 1000，权限够，直接批准。</li>
+      <li><strong>逐级上交</strong>：来了一笔"服务器采购 ¥80,000"，经理权限不够转总监，总监也不够再转 CEO，CEO 无上限，批准。</li>
+      <li><strong>兜底</strong>：万一请求传到链尾还是没人能办（本例 CEO 无上限所以不会发生），打印"申请被拒绝"——宁可明说，不能装没看见。</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>🔍 代码走读</h2>
+    <p>下面是本仓库 TypeScript 实现的骨架（完整版见 <a href="../ts/chain-of-responsibility/main.ts">ts/chain-of-responsibility/main.ts</a>，有删减）：</p>
+    <div class="code-header">ts/chain-of-responsibility/main.ts（简化）</div>
+    <pre><code>// 抽象处理者：能办就办，办不了转给下家
+abstract class Approver {
+  private next: Approver | undefined;
+
+  setNext(next: Approver): Approver {   // 返回 next，方便链式拼接
+    this.next = next;
+    return next;
+  }
+
+  handle(request: PurchaseRequest): void {
+    if (this.canApprove(request.amount)) {
+      console.log(`${this.getTitle()} 批准了 [${request.purpose}]，金额 ¥${request.amount}`);
+    } else if (this.next !== undefined) {
+      console.log(`${this.getTitle()} 权限不足，转交上级审批...`);
+      this.next.handle(request);        // 关键一步：把请求递给链的下一站
+    } else {
+      console.log(`超出所有审批人的权限，申请被拒绝`);  // 链尾兜底
+    }
+  }
+
+  protected abstract canApprove(amount: number): boolean;
+  protected abstract getTitle(): string;
+}
+
+// 具体处理者：只回答"我的权限上限是多少"
+class Manager extends Approver {
+  protected canApprove(amount: number): boolean { return amount &lt;= 1_000; }
+  protected getTitle(): string { return "部门经理"; }
+}
+
+// 客户端：拼链，然后把请求交给链头
+manager.setNext(director).setNext(ceo);
+manager.handle({ amount: 80_000, purpose: "服务器采购" });</code></pre>
+    <div class="callout tip">
+      <p class="callout-title">看懂这段代码，就看懂了整个模式</p>
+      <p>整个模式的核心就是 <code>handle()</code> 里那个 <strong>else 分支的一行递归调用</strong>：<code>this.next.handle(request)</code>。请求就这样一站一站往下传，谁有本事谁截停。剩下的代码都是在定义"每一站的本事"。</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚖️ 什么时候用，什么时候别用</h2>
+    <div class="two-col">
+      <div>
+        <h3>✅ 适合的场景</h3>
+        <ul class="checklist good">
+          <li>同一个请求有好几个人能处理，具体谁来办要<strong>到运行时才见分晓</strong>（按金额、按级别、按类型）</li>
+          <li>处理者经常增减、顺序经常调整——重新拼一次链就行，谁也不用改</li>
+          <li>发请求的一方不想（也不该）认识所有处理者</li>
+        </ul>
+      </div>
+      <div>
+        <h3>❌ 不适合的场景</h3>
+        <ul class="checklist bad">
+          <li>处理者永远只有一个且固定——直接调用最清楚，链是累赘</li>
+          <li>请求必须保证被处理、调用方还要拿到处理结果——链式传递容易"传丢了没人管"</li>
+          <li>性能敏感的热点路径——长链上一个一个问过去，白花时间</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚠️ 容易踩的坑</h2>
+    <ul class="pitfalls">
+      <li><strong>链尾没人兜底 → 请求无声消失</strong>。传到最后没人能办，也不吭声，申请就石沉大海。本例在链尾明确打印"被拒绝"——宁可明说，不可装没看见。</li>
+      <li><strong>链拼错或拼断</strong>。<code>setNext</code> 忘了连、顺序连反（把 CEO 排在经理前面），程序照跑但结果全错。拼链的代码要集中在一处，别散落各文件。</li>
+      <li><strong>把链当流水线什么都塞</strong>。处理者又改数据又发通知，一个节点出事整条链遭殃。每个节点只干"我能不能办"这一件事。</li>
+      <li><strong>调试没痕迹</strong>。请求走到哪一步了全靠猜。每个节点的"转交"处都该打日志（本例就打了"权限不足，转交上级"）。</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>🔗 和其他模式的关系</h2>
+    <ul>
+      <li>和<strong><a href="command.html">命令模式</a></strong>是好搭档：命令把请求打包成对象，责任链让一串处理者轮流接手这个对象，直到有人执行。</li>
+      <li>链上的节点本身可以又是一棵<strong><a href="composite.html">组合模式</a></strong>的树——大链套小链，子链处理完再交上级。</li>
+      <li>和<strong><a href="observer.html">观察者模式</a></strong>方向不同：观察者是"一个消息广播给所有人听"，责任链是"一个请求接力传下去，有一个人接住就停"。</li>
+    </ul>
+  </section>
+
+  <div class="remember">
+    <span class="remember-label">一 句 话 记 住 它</span>
+    <strong>能办就办，办不了往上报；发申请的人，只管把单子递进第一个窗口。</strong>
+  </div>
+
+  <section class="card">
+    <h2>📦 本仓库 9 种语言实现</h2>
+    <p>同一个采购审批的例子，用 9 种语言各写了一遍，挑一个你顺手的对照着看：</p>
+    <div class="lang-links">
+      <a class="pill" href="../cpp/chain-of-responsibility/README.md">C++</a>
+      <a class="pill" href="../go/chain-of-responsibility/README.md">Go</a>
+      <a class="pill" href="../java/chain-of-responsibility/README.md">Java</a>
+      <a class="pill" href="../js/chain-of-responsibility/README.md">JavaScript</a>
+      <a class="pill" href="../objc/chain-of-responsibility/README.md">Objective-C</a>
+      <a class="pill" href="../python/chain-of-responsibility/README.md">Python</a>
+      <a class="pill" href="../rust/chain-of-responsibility/README.md">Rust</a>
+      <a class="pill" href="../swift/chain-of-responsibility/README.md">Swift</a>
+      <a class="pill" href="../ts/chain-of-responsibility/README.md">TypeScript</a>
+    </div>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="proxy.html"><span class="nav-label">← 上一个</span><span class="nav-title">代理模式</span></a>
+    <a class="next" href="command.html"><span class="nav-label">下一个 →</span><span class="nav-title">命令模式</span></a>
+  </nav>
+
+</main>
+
+<footer class="site-footer">
+  <p>GoF 设计模式 · 大白话图解 —— 配套 <a href="../README.md">GoF 多语言实现仓库</a>（9 种语言 × 23 个模式）</p>
+</footer>
+
+</body>
+</html>

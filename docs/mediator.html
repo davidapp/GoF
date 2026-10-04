@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>中介者模式 · Mediator — GoF 设计模式大白话</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-category="behavioral">
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="index.html">📐 GoF 设计模式 · 大白话图解</a>
+    <nav class="crumbs">
+      <a href="index.html">首页</a><span>/</span>
+      <a href="index.html#behavioral">行为型</a><span>/</span>
+      <span class="current">中介者</span>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <section class="pattern-hero">
+    <span class="badge">行为型</span>
+    <h1>中介者模式 <small>Mediator</small></h1>
+    <p class="one-liner">一句话：<strong>一群对象要互相聊天，谁也不直接找谁，统统通过一个"群主"转话；谁进群谁退群，别人根本不用知道。</strong></p>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="iterator.html"><span class="nav-label">← 上一个</span><span class="nav-title">迭代器模式</span></a>
+    <a class="next" href="memento.html"><span class="nav-label">下一个 →</span><span class="nav-title">备忘录模式</span></a>
+  </nav>
+
+  <section class="card">
+    <h2>🌰 生活里的例子</h2>
+    <div class="callout analogy">
+      <p class="callout-title">机场塔台</p>
+      <p>天上几十架飞机要降落、要避让、要排队进跑道，但它们<strong>从不互相直接通话</strong>——你想想，50 架飞机两两喊话，频道里得乱成什么样。真实做法是：每架飞机只跟<strong>塔台</strong>说话，"我要降落"；塔台看着全局大屏，安排谁先谁后、通知谁绕一圈再进。</p>
+      <p>两个细节：飞机之间谁也不认识谁；一架新飞机进场，只要跟塔台打个招呼就融入了编排，其他飞机毫无感知。</p>
+    </div>
+    <p>这个比喻对应模式里的什么：塔台 = <strong>中介者</strong>（ChatRoom，拿着全员名单、定所有转达规则）；飞机 = <strong>同事类</strong>（User，互不认识）；飞机无线电里只存塔台一个频道 = 同事对象只持有<strong>一个</strong>中介者引用；塔台安排谁先谁后 = 交互规则全部集中在中介者一处。</p>
+  </section>
+
+  <section class="card">
+    <h2>😖 没有它会怎样</h2>
+    <p>本仓库的场景是<strong>聊天室</strong>：Alice、Bob、Carol 互发消息。最直接的写法是每个人手里都攥着其他所有人的引用，发消息时挨个点名：</p>
+    <div class="callout pain">
+      <p class="callout-title">直来直去的写法（问题代码）</p>
+      <p>Alice 发消息时直接调用其他人：</p>
+      <p><code>bob.receive(msg)</code> → <code>carol.receive(msg)</code> …… Alice 的"通讯录"里得有所有人。</p>
+    </div>
+    <p>这样写眼下能跑，但麻烦在后头：</p>
+    <ul>
+      <li><strong>新人进群，全体老用户改代码</strong>。来了个 Dave？Alice、Bob、Carol 都得把 Dave 加进自己的通讯录——一处不改他就收不到消息。</li>
+      <li><strong>引用缠成蜘蛛网</strong>。N 个人两两互持引用是 N×(N-1) 条线，10 个人就是 90 条，画出来没法看，谁也不敢动。</li>
+      <li><strong>转发规则散落各处</strong>。"不给发送者本人发、要屏蔽黑名单……"这些规则写在每个用户自己的代码里，改一条规则要改 N 处。</li>
+    </ul>
+    <p>根子上的问题是<strong>多对多的两两直连把所有人焊死在一起</strong>。拆开的办法：把"认识所有人"这件事交给一个人——群主。</p>
+  </section>
+
+  <section class="card">
+    <h2>👥 角色构成（这个模式由几块拼成）</h2>
+    <table>
+      <thead>
+        <tr><th>角色</th><th>大白话职责</th><th>本仓库示例里是谁</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>抽象中介者</strong></td>
+          <td>定规矩："群主要有注册和转话两个本事"。</td>
+          <td><code>ChatMediator</code> 接口</td>
+        </tr>
+        <tr>
+          <td><strong>具体中介者</strong></td>
+          <td>群主本体。拿着全员名单，收到一条消息就转发给除发送者外的所有人。</td>
+          <td><code>ChatRoom</code> 类</td>
+        </tr>
+        <tr>
+          <td><strong>同事类 Colleague</strong></td>
+          <td>群成员。通讯录里只存群主一个联系方式：说话交给他转，听话等他送。</td>
+          <td><code>User</code> 类（Alice、Bob、Carol）</td>
+        </tr>
+        <tr>
+          <td><strong>客户端</strong></td>
+          <td>建群、拉人，之后基本不掺和。</td>
+          <td><code>main()</code> 函数</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>解耦关键在哪：<strong>用户之间零引用，每人只认识群主</strong>。多对多的蜘蛛网被压成"众星捧月"的星型：N 个人只有 N 条线，全都连向中介者。新人入群只需 <code>new User(name, chatRoom)</code>（构造时自动 register），任何老用户一行代码不用改——这就是解耦（把缠在一起的代码拆开，互不认识也能合作）。</p>
+  </section>
+
+  <section class="card">
+    <h2>🗺️ 结构图（谁认识谁、谁调用谁）</h2>
+    <div class="diagram">
+      <div class="dstack">
+        <div class="dbox">User · Alice<small>同事类</small></div>
+        <div class="dbox">User · Bob<small>同事类</small></div>
+        <div class="dbox">User · Carol<small>同事类</small></div>
+      </div>
+      <div class="darrow">⇄<br><small>send() 交给群主<br>receive() 等群主转达</small></div>
+      <div class="dbox key">ChatRoom<small>具体中介者 · 群主<br>拿着全员名单定规矩</small></div>
+    </div>
+    <p class="dcaption">没有群主时：3 个人两两直连要 6 条线，10 个人就是 90 条。有了群主：每人只 1 条线，用户之间谁也不认识谁；想改"谁能收到什么"的规则，只改群主一处。</p>
+  </section>
+
+  <section class="card">
+    <h2>🔄 运转步骤（跑一遍完整流程）</h2>
+    <ol class="steps">
+      <li><strong>建群</strong>：客户端 <code>new ChatRoom()</code>，一个群主就位，名单还是空的。</li>
+      <li><strong>入群</strong>：<code>new User("Alice", chatRoom)</code>——构造函数里自动调 <code>mediator.register(this)</code>，群主把 Alice 记进名单。Bob、Carol 同理。</li>
+      <li><strong>发言</strong>：Alice 调 <code>send("大家好")</code>，自己不点名任何人，直接把消息交给 <code>chatRoom.sendMessage()</code>。</li>
+      <li><strong>转达</strong>：群主遍历名单，跳过发送者 Alice 本人，挨个调 <code>bob.receive(...)</code>、<code>carol.receive(...)</code>。</li>
+      <li><strong>回应</strong>：Bob 也发言，同样只找群主，消息被转给 Alice 和 Carol——一来一回，用户之间零接触。</li>
+      <li><strong>扩容</strong>：再 <code>new User("Dave", chatRoom)</code>，Dave 立刻能收发消息，Alice 们毫无感知、零改动。</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>🔍 代码走读</h2>
+    <p>下面是本仓库 TypeScript 实现的骨架（完整版见 <a href="../ts/mediator/main.ts">ts/mediator/main.ts</a>，有删减）：</p>
+    <div class="code-header">ts/mediator/main.ts（简化）</div>
+    <pre><code>// 具体中介者：拿着全员名单，负责转发
+class ChatRoom implements ChatMediator {
+  private readonly users: User[] = [];
+
+  register(user: User): void {          // 入群：记进名单
+    this.users.push(user);
+  }
+
+  sendMessage(message: string, sender: User): void {
+    for (const user of this.users) {
+      if (user !== sender) {            // 除了说话的人，挨个转达
+        user.receive(message, sender.getName());
+      }
+    }
+  }
+}
+
+// 同事类：通讯录里只有群主，不认识任何其他用户
+class User {
+  constructor(
+    private readonly name: string,
+    private readonly mediator: ChatMediator,
+  ) {
+    this.mediator.register(this);       // 生下来就进群
+  }
+
+  send(message: string): void {
+    console.log(`[${this.name} 发送]: ${message}`);
+    this.mediator.sendMessage(message, this);  // 交给群主转发
+  }
+
+  receive(message: string, from: string): void {
+    console.log(`  -> ${this.name} 收到来自「${from}」的消息: ${message}`);
+  }
+}</code></pre>
+    <div class="callout tip">
+      <p class="callout-title">看懂这段代码，就看懂了整个模式</p>
+      <p>核心就两处：<strong>User 的 <code>send()</code> 只调群主、不点名任何人；ChatRoom 的 <code>sendMessage()</code> 遍历名单、跳过发送者</strong>。把"发给谁、怎么发"的规则全部收进群主一处，成员就彻底解放了。</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚖️ 什么时候用，什么时候别用</h2>
+    <div class="two-col">
+      <div>
+        <h3>✅ 适合的场景</h3>
+        <ul class="checklist good">
+          <li>一组对象互相引用已经织成<strong>蜘蛛网</strong>（N×(N-1) 条线），改一个牵一串</li>
+          <li>想把交互规则<strong>集中管理</strong>：谁能跟谁说话、消息怎么路由，改一处全局生效</li>
+          <li>对象想单独复用，却被一堆"熟人"缠着抽不出来</li>
+        </ul>
+      </div>
+      <div>
+        <h3>❌ 不适合的场景</h3>
+        <ul class="checklist bad">
+          <li>交互本来就简单、就两三个对象——加个中介者纯属多一层转手</li>
+          <li>交互是<strong>单向广播</strong>（一个变了通知大家）——用观察者更轻，别上中介者</li>
+          <li>协调逻辑本身巨复杂——硬塞进一个类会养成"上帝对象"，该考虑拆分或分区</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚠️ 容易踩的坑</h2>
+    <ul class="pitfalls">
+      <li><strong>中介者养成"上帝对象"</strong>。谁跟谁说话、消息过滤、权限、日志全往 ChatRoom 里堆，最后这个类几千行，谁也不敢动。群主只管"路由"，别管业务加工。</li>
+      <li><strong>同事类反向翻群主的家底</strong>。User 开始遍历 ChatRoom 的名单、自己动手挑收件人——解耦成果瞬间归零。同事只准调中介者的公开接口。</li>
+      <li><strong>和观察者傻傻分不清</strong>。观察者是"一个喇叭，单向广播给所有订阅者"；中介者是"一群人对聊，全经群主转话，群主还能定规矩"。方向和用途都不一样，别选错。</li>
+      <li><strong>中介者成了单点瓶颈</strong>。所有消息都过它，它一卡全场哑；规则一错全局错。测试和监控要重点照顾它。</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>🔗 和其他模式的关系</h2>
+    <ul>
+      <li>和<strong><a href="observer.html">观察者模式</a></strong>最容易混，一句话分清：<strong>观察者是"单向广播"</strong>——一个主题变了，通知所有订阅它的人，订阅者不回话；<strong>中介者是"多向协调"</strong>——大家你一言我一语，全经群主转话，群主还能定规矩。聊天室若只需要"管理员发公告"，用观察者就够了。</li>
+      <li>和<strong><a href="facade.html">外观模式</a></strong>都在"收拢复杂度"，但方向相反：外观是单向的——替你简化"进去调用"的入口；中介者是双向的——内部一群对象互相说话都得靠它协调。</li>
+      <li>中介者常被做成<strong><a href="singleton.html">单例</a></strong>：全局只有一个聊天室/事件总线，大家进来找的都是同一个群主。</li>
+    </ul>
+  </section>
+
+  <div class="remember">
+    <span class="remember-label">一 句 话 记 住 它</span>
+    <strong>别再两两打电话了，都进群找群主；谁进群谁退群，其他人根本不用知道。</strong>
+  </div>
+
+  <section class="card">
+    <h2>📦 本仓库 9 种语言实现</h2>
+    <p>同一个聊天室的例子，用 9 种语言各写了一遍，挑一个你顺手的对照着看：</p>
+    <div class="lang-links">
+      <a class="pill" href="../cpp/mediator/README.md">C++</a>
+      <a class="pill" href="../go/mediator/README.md">Go</a>
+      <a class="pill" href="../java/mediator/README.md">Java</a>
+      <a class="pill" href="../js/mediator/README.md">JavaScript</a>
+      <a class="pill" href="../objc/mediator/README.md">Objective-C</a>
+      <a class="pill" href="../python/mediator/README.md">Python</a>
+      <a class="pill" href="../rust/mediator/README.md">Rust</a>
+      <a class="pill" href="../swift/mediator/README.md">Swift</a>
+      <a class="pill" href="../ts/mediator/README.md">TypeScript</a>
+    </div>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="iterator.html"><span class="nav-label">← 上一个</span><span class="nav-title">迭代器模式</span></a>
+    <a class="next" href="memento.html"><span class="nav-label">下一个 →</span><span class="nav-title">备忘录模式</span></a>
+  </nav>
+
+</main>
+
+<footer class="site-footer">
+  <p>GoF 设计模式 · 大白话图解 —— 配套 <a href="../README.md">GoF 多语言实现仓库</a>（9 种语言 × 23 个模式）</p>
+</footer>
+
+</body>
+</html>

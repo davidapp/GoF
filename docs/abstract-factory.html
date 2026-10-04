@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>抽象工厂模式 · Abstract Factory — GoF 设计模式大白话</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-category="creational">
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="index.html">📐 GoF 设计模式 · 大白话图解</a>
+    <nav class="crumbs">
+      <a href="index.html">首页</a><span>/</span>
+      <a href="index.html#creational">创建型</a><span>/</span>
+      <span class="current">抽象工厂</span>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <section class="pattern-hero">
+    <span class="badge">创建型</span>
+    <h1>抽象工厂模式 <small>Abstract Factory</small></h1>
+    <p class="one-liner">一句话：<strong>一个工厂不造单件，专造"成套"的——换风格时整套连着换，绝不出现混搭。</strong></p>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="index.html"><span class="nav-label">← 总览</span><span class="nav-title">返回首页</span></a>
+    <a class="next" href="builder.html"><span class="nav-label">下一个 →</span><span class="nav-title">建造者模式</span></a>
+  </nav>
+
+  <section class="card">
+    <h2>🌰 生活里的例子</h2>
+    <div class="callout analogy">
+      <p class="callout-title">去家具城买"整套家具"</p>
+      <p>你跑进家具城，跟导购说：<strong>"我家要北欧风，客厅三件套来一套。"</strong>导购直接给你配齐北欧风沙发、北欧风茶几、北欧风电视柜——<strong>绝对不会</strong>给你塞一个雕花红木沙发进来。哪天改主意要中式风？还是一句话的事：整套退回，换一整套中式的进来。</p>
+      <p>你自始至终没关心过"沙发是哪个木匠做的"，你只说了两件事：<strong>要哪几样（沙发、茶几、电视柜），要哪种风（北欧还是中式）</strong>。</p>
+    </div>
+    <p>翻译成模式的语言：<strong>"风格"就是产品族</strong>（Windows 风 / macOS 风），<strong>"沙发、茶几"这些品类就是抽象产品</strong>（按钮、复选框），<strong>导购背后的家具厂就是具体工厂</strong>。你要的从来不是某个单件，而是"一整套配套的"。</p>
+  </section>
+
+  <section class="card">
+    <h2>😖 没有它会怎样</h2>
+    <p>本仓库的示例是<strong>跨平台界面库</strong>：同一套界面代码，在 Windows 上要长 Windows 的样子，在 macOS 上要长 macOS 的样子。最直接的写法，是在每个用控件的地方现场判断平台：</p>
+    <div class="callout pain">
+      <p class="callout-title">直来直去的写法（问题代码）</p>
+      <p>界面上每画一个控件，都来这么一段：</p>
+      <p><code>if (platform === "windows") btn = new WindowsButton()</code><br>
+      <code>else if (platform === "macos") btn = new MacButton()</code> ……</p>
+      <p>复选框再来一遍，滑块再来一遍，一百个页面各来一遍。</p>
+    </div>
+    <p>这样写的下场：</p>
+    <ul>
+      <li><strong>if/else 满天飞</strong>：一百处用控件的地方就有一百段平台判断，明天加个 Linux 平台，改一百处，漏一处就是 bug。</li>
+      <li><strong>可能混搭出错</strong>：哪处手滑写了 <code>new MacCheckbox()</code> 配 <code>new WindowsButton()</code>，界面立刻"精神分裂"，编译器还不报错。</li>
+      <li><strong>界面代码被迫认识所有具体类</strong>：Windows、Mac 的类名缠满业务代码，解耦（就是把缠在一起的代码拆开，互不认识也能合作）无从谈起。</li>
+    </ul>
+    <p>根子上的问题是<strong>"选货"这件事散落在各处</strong>，而它本该集中到"厂子"里，一次定好一整套。</p>
+  </section>
+
+  <section class="card">
+    <h2>👥 角色构成（这个模式由几块拼成）</h2>
+    <table>
+      <thead>
+        <tr><th>角色</th><th>大白话职责</th><th>本仓库示例里是谁</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>抽象产品</strong></td>
+          <td>给"这类东西能干什么"定规矩，只定能力、不问出身。</td>
+          <td><code>Button</code>、<code>Checkbox</code> 接口</td>
+        </tr>
+        <tr>
+          <td><strong>具体产品</strong></td>
+          <td>各家风的具体货：方形边框的 Windows 按钮、圆形的 macOS 复选框……</td>
+          <td><code>WindowsButton</code>、<code>WindowsCheckbox</code>、<code>MacButton</code>、<code>MacCheckbox</code></td>
+        </tr>
+        <tr>
+          <td><strong>抽象工厂</strong></td>
+          <td>一张供货清单，只宣布"我能造按钮和复选框"，别的不问。</td>
+          <td><code>GUIFactory</code> 接口</td>
+        </tr>
+        <tr>
+          <td><strong>具体工厂</strong></td>
+          <td>真正的厂子，每家只造本平台的成套货。</td>
+          <td><code>WindowsFactory</code>、<code>MacFactory</code></td>
+        </tr>
+        <tr>
+          <td><strong>客户端</strong></td>
+          <td>使用方，从头到尾只跟抽象接口说话。</td>
+          <td><code>renderUI()</code> 函数</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>解耦关键：<strong><code>renderUI()</code> 里从头到尾没出现 Windows、Mac 任何一个字</strong>——它只认识 <code>GUIFactory</code>、<code>Button</code>、<code>Checkbox</code> 三张"合同"。往里塞哪家工厂，就出哪家货，客户端一行都不用改。</p>
+  </section>
+
+  <section class="card">
+    <h2>🗺️ 结构图（谁认识谁、谁调用谁）</h2>
+    <div class="diagram">
+      <div class="dbox">renderUI<small>客户端 · 只认接口</small></div>
+      <div class="darrow">createButton()<br>createCheckbox()<br><small>伸手要货</small></div>
+      <div class="dstack">
+        <div class="dbox key">WindowsFactory<small>→ WindowsButton + WindowsCheckbox</small></div>
+        <div class="dbox key">MacFactory<small>→ MacButton + MacCheckbox</small></div>
+      </div>
+    </div>
+    <p class="dcaption">箭头方向 = 调用方向：客户端只对着 GUIFactory 接口说话；换下面一个工厂盒子，整套产品跟着换族，renderUI 毫无感知。</p>
+  </section>
+
+  <section class="card">
+    <h2>🔄 运转步骤（跑一遍完整流程）</h2>
+    <ol class="steps">
+      <li><strong>选厂</strong>：程序启动时 <code>createFactory("windows")</code> 按平台拿到 <code>WindowsFactory</code>。</li>
+      <li><strong>开工</strong>：<code>renderUI(factory)</code> 被调用，它只管伸手要货：<code>factory.createButton()</code>。</li>
+      <li><strong>造货</strong>：工厂内部 <code>new WindowsButton()</code>，但返回类型是抽象的 <code>Button</code>——具体身份被抹掉，只留能力。</li>
+      <li><strong>配套拿齐</strong>：再要 <code>createCheckbox()</code>，拿到的必然是 <code>WindowsCheckbox</code>，同一家厂出的，绝不混搭。</li>
+      <li><strong>使用</strong>：界面代码调 <code>button.render()</code>、<code>checkbox.toggle()</code>，画出来就是 Windows 风格。</li>
+      <li><strong>换族</strong>：把 "windows" 改成 "macos"，<code>renderUI</code> 一字不改，整套控件变成 mac 风。</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>🔍 代码走读</h2>
+    <p>下面是本仓库 TypeScript 实现的骨架（完整版见 <a href="../ts/abstract-factory/main.ts">ts/abstract-factory/main.ts</a>，有删减）：</p>
+    <div class="code-header">ts/abstract-factory/main.ts（简化）</div>
+    <pre><code>// 抽象产品：只约定"控件能干什么"，不问是哪家的
+interface Button {
+  render(): string;
+  onClick(): string;
+}
+interface Checkbox {
+  render(): string;
+  toggle(): string;
+}
+
+// 抽象工厂：一张供货清单，声明"我造哪几样"
+interface GUIFactory {
+  createButton(): Button;
+  createCheckbox(): Checkbox;
+}
+
+// 具体工厂：只造 Windows 风格的成套控件
+class WindowsFactory implements GUIFactory {
+  createButton(): Button { return new WindowsButton(); }
+  createCheckbox(): Checkbox { return new WindowsCheckbox(); }
+}
+
+// 客户端：全程只跟抽象接口说话，没出现任何平台字样
+function renderUI(factory: GUIFactory): void {
+  const button = factory.createButton();     // 闭眼拿货
+  const checkbox = factory.createCheckbox(); // 必然同族
+  console.log(button.render());
+  console.log(checkbox.render());
+}</code></pre>
+    <div class="callout tip">
+      <p class="callout-title">看懂这段代码，就看懂了整个模式</p>
+      <p>眼睛盯住 <code>renderUI</code>：它拿到的是 <code>GUIFactory</code> 这张合同，根本不知道背后是哪家厂。<code>main()</code> 里 <code>createFactory("macos")</code> 一换，同一行代码出的是另一套货——<strong>换工厂 = 换整套风格</strong>，这就是全部魔法。</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚖️ 什么时候用，什么时候别用</h2>
+    <div class="two-col">
+      <div>
+        <h3>✅ 适合的场景</h3>
+        <ul class="checklist good">
+          <li>产品天然<strong>成族出现、必须配套</strong>，混搭就是事故（UI 控件、数据库方言）</li>
+          <li>系统要在多套产品族之间<strong>整体切换</strong>，而且最好一处切换</li>
+          <li>想对客户端<strong>隐藏具体产品类</strong>，只暴露抽象接口</li>
+        </ul>
+      </div>
+      <div>
+        <h3>❌ 不适合的场景</h3>
+        <ul class="checklist bad">
+          <li>产品种类经常增加——每加一样，工厂接口和所有具体工厂都得改</li>
+          <li>只需要造一样东西，没有"配套"一说——工厂方法就够了</li>
+          <li>几类产品之间毫无关联，硬凑成一个"族"纯属自找麻烦</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚠️ 容易踩的坑</h2>
+    <ul class="pitfalls">
+      <li><strong>加新产品 = 接口大地震</strong>。<code>GUIFactory</code> 想加一个 <code>createSlider()</code>，接口一改，所有具体工厂全部要跟着改。产品结构不稳的项目慎用。</li>
+      <li><strong>类数量爆炸</strong>。N 个平台 × M 种控件 = N×M 个具体产品类，小项目用它等于自找罪受。</li>
+      <li><strong>换族只在"发牌时"方便</strong>。工厂在创建时传进去，对象已经 new 出来了，程序跑到一半想整套换风格？难。</li>
+      <li><strong>和工厂方法傻傻分不清</strong>。记口诀：工厂方法造"一个"，抽象工厂造"一族"。</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>🔗 和其他模式的关系</h2>
+    <ul>
+      <li>和<strong><a href="factory-method.html">工厂方法模式</a></strong>最容易混：工厂方法靠子类重写、只负责造"一个"产品；抽象工厂靠组合（把工厂对象传进来）、负责造"一整族"。</li>
+      <li>常和<strong><a href="builder.html">建造者模式</a></strong>配合：抽象工厂决定"用哪家厂的套件"，建造者负责"复杂的大家伙怎么一步一步攒起来"。</li>
+      <li>具体工厂常被做成<strong><a href="singleton.html">单例模式</a></strong>——一个厂子造一次就够了，全局共用一个 <code>WindowsFactory</code>。</li>
+    </ul>
+  </section>
+
+  <div class="remember">
+    <span class="remember-label">一 句 话 记 住 它</span>
+    <strong>选的不是一件货，是一整套；想换风格？换个厂就行。</strong>
+  </div>
+
+  <section class="card">
+    <h2>📦 本仓库 9 种语言实现</h2>
+    <p>同一个跨平台界面的例子，用 9 种语言各写了一遍，挑一个你顺手的对照着看：</p>
+    <div class="lang-links">
+      <a class="pill" href="../cpp/abstract-factory/README.md">C++</a>
+      <a class="pill" href="../go/abstract-factory/README.md">Go</a>
+      <a class="pill" href="../java/abstract-factory/README.md">Java</a>
+      <a class="pill" href="../js/abstract-factory/README.md">JavaScript</a>
+      <a class="pill" href="../objc/abstract-factory/README.md">Objective-C</a>
+      <a class="pill" href="../python/abstract-factory/README.md">Python</a>
+      <a class="pill" href="../rust/abstract-factory/README.md">Rust</a>
+      <a class="pill" href="../swift/abstract-factory/README.md">Swift</a>
+      <a class="pill" href="../ts/abstract-factory/README.md">TypeScript</a>
+    </div>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="index.html"><span class="nav-label">← 总览</span><span class="nav-title">返回首页</span></a>
+    <a class="next" href="builder.html"><span class="nav-label">下一个 →</span><span class="nav-title">建造者模式</span></a>
+  </nav>
+
+</main>
+
+<footer class="site-footer">
+  <p>GoF 设计模式 · 大白话图解 —— 配套 <a href="../README.md">GoF 多语言实现仓库</a>（9 种语言 × 23 个模式）</p>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>桥接模式 · Bridge — GoF 设计模式大白话</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-category="structural">
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="index.html">📐 GoF 设计模式 · 大白话图解</a>
+    <nav class="crumbs">
+      <a href="index.html">首页</a><span>/</span>
+      <a href="index.html#structural">结构型</a><span>/</span>
+      <span class="current">桥接</span>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <section class="pattern-hero">
+    <span class="badge">结构型</span>
+    <h1>桥接模式 <small>Bridge</small></h1>
+    <p class="one-liner">一句话：<strong>两个各自会变的东西，别用继承焊死——中间搭座桥，各变各的，随便组合。</strong></p>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="adapter.html"><span class="nav-label">← 上一个</span><span class="nav-title">适配器模式</span></a>
+    <a class="next" href="composite.html"><span class="nav-label">下一个 →</span><span class="nav-title">组合模式</span></a>
+  </nav>
+
+  <section class="card">
+    <h2>🌰 生活里的例子</h2>
+    <div class="callout analogy">
+      <p class="callout-title">万能遥控器和电器</p>
+      <p>遥控器和电器是<strong>分开卖的</strong>：遥控器有普通款、高级款；电器有电视、收音机、音响……但没有哪家会生产"电视专用高级遥控器""收音机专用普通遥控器"这种专用货。</p>
+      <p>凭什么能分开？因为双方都守同一套<strong>红外指令标准</strong>：遥控器只管发"开机、调音量"这些指令，至于是电视还是收音机在听，它不关心；电器只管认指令干活，也不知道遥控器是高级还是普通。</p>
+    </div>
+    <p>对应到模式里：<strong>遥控器是"抽象"那一侧，电器是"实现"那一侧，那套指令标准就是接口，遥控器里揣着的电器引用就是"桥"</strong>。两侧各自出新品，随便搭配。</p>
+  </section>
+
+  <section class="card">
+    <h2>😖 没有它会怎样</h2>
+    <p>本仓库的例子正是遥控器控制设备。如果不用桥接，靠继承硬拼这两种遥控器 × 两种设备的组合：</p>
+    <div class="callout pain">
+      <p class="callout-title">直来直去的写法（问题代码）</p>
+      <p>为每种组合各写一个类：</p>
+      <p><code>RemoteControlTV</code>、<code>RemoteControlRadio</code>、<code>AdvancedRemoteControlTV</code>、<code>AdvancedRemoteControlRadio</code> ……</p>
+    </div>
+    <p>2 × 2 = 4 个类，眼下还能忍，但麻烦在后头：</p>
+    <ul>
+      <li><strong>每加一种设备（音响），所有遥控器都得为它生一个娃</strong>，类数量翻倍。</li>
+      <li><strong>每加一种遥控器（语音款），又得把每种设备再抄一遍</strong>，再翻倍。</li>
+      <li>同样的"开关机"逻辑在 4 个类里抄了 4 遍，<strong>改个音量步长要改 4 处</strong>。</li>
+    </ul>
+    <p>这就是教科书说的<strong>类爆炸</strong>：两个维度用继承相乘，类的数量是乘积，越加越多。</p>
+  </section>
+
+  <section class="card">
+    <h2>👥 角色构成（这个模式由几块拼成）</h2>
+    <table>
+      <thead>
+        <tr><th>角色</th><th>大白话职责</th><th>本仓库示例里是谁</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>实现接口 Implementor</strong></td>
+          <td>电器这侧的规矩：想被遥控，就得会开关机、调音量。</td>
+          <td><code>Device</code> 接口</td>
+        </tr>
+        <tr>
+          <td><strong>具体实现</strong></td>
+          <td>照规矩干活的电器，各干各的，互相不认识。</td>
+          <td><code>TV</code>、<code>Radio</code></td>
+        </tr>
+        <tr>
+          <td><strong>抽象 Abstraction</strong></td>
+          <td>遥控器这侧：揣着一个 <code>Device</code> 引用——这个引用就是"桥"。干活只调接口，不挑设备。</td>
+          <td><code>RemoteControl</code></td>
+        </tr>
+        <tr>
+          <td><strong>扩展抽象</strong></td>
+          <td>遥控器出新款：加个静音键，照样什么设备都能控。</td>
+          <td><code>AdvancedRemoteControl</code>（新增 <code>mute()</code>）</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>解耦关键在：<strong>遥控器不继承任何设备，设备也不继承任何遥控器，两边只靠一个 <code>Device</code> 接口相连</strong>。新增音响？只写一个 <code>SoundBar</code> 实现 <code>Device</code>，所有遥控器立刻能用；新增语音遥控器？只写一个遥控器子类，所有电器立刻能被控。两边各自长个儿，互不打扰。</p>
+  </section>
+
+  <section class="card">
+    <h2>🗺️ 结构图（谁认识谁、谁调用谁）</h2>
+    <div class="diagram">
+      <div class="dstack">
+        <div class="dbox key">RemoteControl<small>抽象 · 普通遥控器</small></div>
+        <div class="dbox">AdvancedRemoteControl<small>扩展抽象 · 高级遥控器</small></div>
+      </div>
+      <div class="darrow">持有引用<br><small>构造时传入<br>这就是"桥"</small></div>
+      <div class="dstack">
+        <div class="dbox key">Device<small>实现接口 · 指令标准</small></div>
+        <div class="dbox">TV<small>具体实现 · 电视</small></div>
+        <div class="dbox">Radio<small>具体实现 · 收音机</small></div>
+      </div>
+    </div>
+    <p class="dcaption">左边任选一个 × 右边任选一个 = <code>new AdvancedRemoteControl(new TV())</code>。箭头方向 = 调用方向：只有遥控器调设备，设备从不回头找遥控器。</p>
+  </section>
+
+  <section class="card">
+    <h2>🔄 运转步骤（跑一遍完整流程）</h2>
+    <ol class="steps">
+      <li><strong>定标准</strong>：先定 <code>Device</code> 接口，规定电器必须会 <code>turnOn</code>、<code>setVolume</code> 这些动作。</li>
+      <li><strong>造电器</strong>：<code>TV</code>、<code>Radio</code> 各自实现 <code>Device</code>，各管各的开机动画和音量范围。</li>
+      <li><strong>搭桥</strong>：<code>RemoteControl</code> 构造时收一个 <code>Device</code> 存下来——桥搭好了。</li>
+      <li><strong>过桥干活</strong>：按电源键，<code>togglePower()</code> 只问 <code>this.device.isOn()</code>，是关的就 <code>turnOn()</code>，根本不关心对面是谁。</li>
+      <li><strong>出新款</strong>：<code>AdvancedRemoteControl</code> 加一个 <code>mute()</code>，代码里只调 <code>device.setVolume(0)</code>，一行没碰任何电器。</li>
+      <li><strong>自由组合</strong>：<code>new AdvancedRemoteControl(new Radio())</code>——高级遥控器配收音机，不用专门造一个类。</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>🔍 代码走读</h2>
+    <p>下面是本仓库 TypeScript 实现的骨架（完整版见 <a href="../ts/bridge/main.ts">ts/bridge/main.ts</a>，有删减）：</p>
+    <div class="code-header">ts/bridge/main.ts（简化）</div>
+    <pre><code>// 实现接口：设备这一维度，遥控器只认它
+interface Device {
+  isOn(): boolean;
+  turnOn(): void;
+  turnOff(): void;
+  setVolume(percent: number): void;
+  getVolume(): number;
+}
+
+// 抽象：遥控器这一维度，怀里揣着 device —— 桥就在这
+class RemoteControl {
+  constructor(protected device: Device) {}
+
+  togglePower(): void {
+    this.device.isOn() ? this.device.turnOff() : this.device.turnOn();
+  }
+
+  volumeUp(): void {
+    this.device.setVolume(this.device.getVolume() + 10); // 只调接口
+  }
+}
+
+// 扩展抽象：加静音键，一个字的设备代码都没碰
+class AdvancedRemoteControl extends RemoteControl {
+  mute(): void {
+    this.device.setVolume(0); // 还是只会调 Device 接口
+    console.log(`${this.device.getName()} 已静音`);
+  }
+}
+
+// 两个维度自由组合，不需要"高级电视遥控器"这种专用类
+const remote = new AdvancedRemoteControl(new TV());
+remote.togglePower();
+remote.mute();</code></pre>
+    <div class="callout tip">
+      <p class="callout-title">看懂这段代码，就看懂了整个模式</p>
+      <p>整座桥其实就是<strong>构造函数里那一个 <code>device</code> 字段</strong>：用组合（揣一个引用）代替继承（生一堆子类），两个维度从"相乘"变回"相加"，类数量就不爆炸了。</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚖️ 什么时候用，什么时候别用</h2>
+    <div class="two-col">
+      <div>
+        <h3>✅ 适合的场景</h3>
+        <ul class="checklist good">
+          <li>一个东西有<strong>两个各自独立变化的维度</strong>（遥控器款式 × 设备种类、形状 × 颜色、平台 × 业务）</li>
+          <li>不想在两个维度之间写死绑定，希望<strong>运行时能换</strong>其中一端</li>
+          <li>继承已经开始套娃、类数量按乘积涨——该拆桥了</li>
+        </ul>
+      </div>
+      <div>
+        <h3>❌ 不适合的场景</h3>
+        <ul class="checklist bad">
+          <li>只有一个维度会变——老实用继承，别硬拆两个维度</li>
+          <li>两个维度其实互相纠缠、拆开后反而要说一堆废话传参</li>
+          <li>就三五个类的小功能——上桥接纯属过度设计</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚠️ 容易踩的坑</h2>
+    <ul class="pitfalls">
+      <li><strong>实现接口设计得太大</strong>。<code>Device</code> 里塞二三十个方法，每种新电器都要实现一遍用不上的功能，写得想骂人——接口只放两侧都需要的公共动作。</li>
+      <li><strong>和策略模式混着用</strong>。俩结构几乎一样，但桥接是"两个维度长期共存、各自扩展"，策略是"同一个动作的几种做法、随时互换"。定位搞混，架构就长歪了。</li>
+      <li><strong>偷偷在抽象里 instanceof 设备</strong>。一旦遥控器里出现"如果是电视就……"，桥就白搭了，又焊回去了。</li>
+      <li><strong>桥搭了却不用</strong>。抽象侧直接把活全干了不转发给 <code>device</code>，实现侧成了摆设，回到老路。</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>🔗 和其他模式的关系</h2>
+    <ul>
+      <li>和<strong><a href="strategy.html">策略模式</a></strong>是双胞胎结构：都是"组合持接口"。区别在意图——<strong>桥接是两个维度长期共存各自扩展，策略是同一件事的多种做法运行时互换</strong>。</li>
+      <li>和<strong><a href="adapter.html">适配器模式</a></strong>一先一后：桥接是设计期就把两侧分开，适配器是事后补救已经对不上的接口。</li>
+      <li>实现那一侧的对象常用<strong><a href="abstract-factory.html">抽象工厂</a></strong>来造，把"new 哪个设备"也藏起来。</li>
+    </ul>
+  </section>
+
+  <div class="remember">
+    <span class="remember-label">一 句 话 记 住 它</span>
+    <strong>两个各自会变的东西别焊死：中间搭座桥，各长各的，随便搭配。</strong>
+  </div>
+
+  <section class="card">
+    <h2>📦 本仓库 9 种语言实现</h2>
+    <p>同一个遥控器 × 电器的例子，用 9 种语言各写了一遍，挑一个你顺手的对照着看：</p>
+    <div class="lang-links">
+      <a class="pill" href="../cpp/bridge/README.md">C++</a>
+      <a class="pill" href="../go/bridge/README.md">Go</a>
+      <a class="pill" href="../java/bridge/README.md">Java</a>
+      <a class="pill" href="../js/bridge/README.md">JavaScript</a>
+      <a class="pill" href="../objc/bridge/README.md">Objective-C</a>
+      <a class="pill" href="../python/bridge/README.md">Python</a>
+      <a class="pill" href="../rust/bridge/README.md">Rust</a>
+      <a class="pill" href="../swift/bridge/README.md">Swift</a>
+      <a class="pill" href="../ts/bridge/README.md">TypeScript</a>
+    </div>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="adapter.html"><span class="nav-label">← 上一个</span><span class="nav-title">适配器模式</span></a>
+    <a class="next" href="composite.html"><span class="nav-label">下一个 →</span><span class="nav-title">组合模式</span></a>
+  </nav>
+
+</main>
+
+<footer class="site-footer">
+  <p>GoF 设计模式 · 大白话图解 —— 配套 <a href="../README.md">GoF 多语言实现仓库</a>（9 种语言 × 23 个模式）</p>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>适配器模式 · Adapter — GoF 设计模式大白话</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-category="structural">
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="index.html">📐 GoF 设计模式 · 大白话图解</a>
+    <nav class="crumbs">
+      <a href="index.html">首页</a><span>/</span>
+      <a href="index.html#structural">结构型</a><span>/</span>
+      <span class="current">适配器</span>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <section class="pattern-hero">
+    <span class="badge">结构型</span>
+    <h1>适配器模式 <small>Adapter</small></h1>
+    <p class="one-liner">一句话：<strong>插头对不上插座？别改电器也别改墙，中间垫一个"转换头"，两边立刻都好使。</strong></p>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="singleton.html"><span class="nav-label">← 上一个</span><span class="nav-title">单例模式</span></a>
+    <a class="next" href="bridge.html"><span class="nav-label">下一个 →</span><span class="nav-title">桥接模式</span></a>
+  </nav>
+
+  <section class="card">
+    <h2>🌰 生活里的例子</h2>
+    <div class="callout analogy">
+      <p class="callout-title">出国旅行的电源转换头</p>
+      <p>你带着国标插头的吹风机去欧洲旅行，酒店的插座是欧标的——插头插不进去。怎么办？<strong>吹风机不能拆，墙更不能砸</strong>，你花十块钱买一个转换头：一头是欧标插脚，另一头是国标插孔，往中间一接，通电了。</p>
+      <p>注意这个转换头<strong>自己不发电也不耗电</strong>，它只干一件事：让两边各认各的标准，中间替它们"翻译"。</p>
+    </div>
+    <p>对应到代码里：你的电器就是<strong>客户端</strong>（只认识国标插孔），欧洲的墙就是<strong>第三方类</strong>（只提供欧标插脚），转换头就是<strong>适配器</strong>。谁也不用改，接上就能用。</p>
+  </section>
+
+  <section class="card">
+    <h2>😖 没有它会怎样</h2>
+    <p>本仓库的例子是支付：应用里统一的接口是 <code>PaymentProcessor.pay(yuan)</code>，单位是"元"。现在要接入第三方 Stripe，可人家的 SDK 只提供 <code>chargeInCents(cents)</code>，方法名不一样，单位还是"分"。最直接的写法：</p>
+    <div class="callout pain">
+      <p class="callout-title">直来直去的写法（问题代码）</p>
+      <p>在每个付款的地方都写一段特判：</p>
+      <p><code>if (用的是 Stripe) { 乘 100、四舍五入、调 chargeInCents } else { 直接调 pay }</code> ……</p>
+    </div>
+    <p>这样写眼下能跑，但麻烦在后头：</p>
+    <ul>
+      <li><strong>每接一家新支付渠道，付款代码就得再开一次膛</strong>。下个月来个 PayPal？再抄一段 if。</li>
+      <li><strong>"元变分"这种换算胶水洒得满地都是</strong>，十处调用抄十遍，改一处漏九处。</li>
+      <li>付款流程被迫认识每家第三方的细节，<strong>第三方 SDK 一升级，你的业务代码跟着抖三抖</strong>。</li>
+    </ul>
+    <p>根子上的问题是：<strong>不该让客户端去迁就别人</strong>，该在中间放一个专门翻译的东西。</p>
+  </section>
+
+  <section class="card">
+    <h2>👥 角色构成（这个模式由几块拼成）</h2>
+    <table>
+      <thead>
+        <tr><th>角色</th><th>大白话职责</th><th>本仓库示例里是谁</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>目标接口 Target</strong></td>
+          <td>你想要的那个插座孔型：全应用统一的标准，大家只认它。</td>
+          <td><code>PaymentProcessor</code> 接口（<code>pay(yuan)</code>）</td>
+        </tr>
+        <tr>
+          <td><strong>被适配者 Adaptee</strong></td>
+          <td>那个接口对不上的家伙，通常是第三方库或老代码，<strong>动不得</strong>。</td>
+          <td><code>StripePayment</code>（只提供 <code>chargeInCents(cents)</code>）</td>
+        </tr>
+        <tr>
+          <td><strong>适配器 Adapter</strong></td>
+          <td>转换头本体：实现目标接口，怀里揣着被适配者，负责翻译转手。</td>
+          <td><code>StripeAdapter</code></td>
+        </tr>
+        <tr>
+          <td><strong>对照组</strong></td>
+          <td>天生就符合标准接口的类，说明适配器只为"对不上"的家伙服务。</td>
+          <td><code>AlipayPayment</code>（原生实现 <code>PaymentProcessor</code>）</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>解耦（把缠在一起的代码拆开，互不认识也能合作）关键在：<strong>客户端只认 <code>PaymentProcessor</code> 这张"孔型图"，根本不知道背后是支付宝还是被包了一层的 Stripe</strong>；而"元乘一百变分"这种脏活，全关在 <code>StripeAdapter</code> 一个屋里，半点不外漏。</p>
+  </section>
+
+  <section class="card">
+    <h2>🗺️ 结构图（谁认识谁、谁调用谁）</h2>
+    <div class="diagram">
+      <div class="dbox">checkout<small>客户端 · 只认 pay(yuan)</small></div>
+      <div class="darrow">调用<br><small>pay(yuan)</small></div>
+      <div class="dbox key">PaymentProcessor<small>目标接口 · 单位"元"</small></div>
+      <div class="darrow">实现<br><small>pay(yuan)</small></div>
+      <div class="dbox key">StripeAdapter<small>适配器 · 元→分换算</small></div>
+      <div class="darrow">持有并调用<br><small>chargeInCents(cents)</small></div>
+      <div class="dbox">StripePayment<small>第三方 SDK · 动不得</small></div>
+    </div>
+    <p class="dcaption">对照：<code>AlipayPayment</code> 原生就实现 PaymentProcessor，直接接在"实现"箭头后面，不需要适配器。</p>
+  </section>
+
+  <section class="card">
+    <h2>🔄 运转步骤（跑一遍完整流程）</h2>
+    <ol class="steps">
+      <li><strong>定标准</strong>：应用统一定好 <code>PaymentProcessor</code> 接口，金额单位用"元"。</li>
+      <li><strong>引第三方</strong>：接入 <code>StripePayment</code>，发现方法名和单位都对不上。</li>
+      <li><strong>造转换头</strong>：写 <code>StripeAdapter</code>，实现 <code>PaymentProcessor</code>，构造时收下一个 <code>StripePayment</code>。</li>
+      <li><strong>翻译</strong>：客户调 <code>pay(128.5)</code>，适配器把元乘 100 四舍五入成 12850 分，转手调 <code>chargeInCents(12850)</code>。</li>
+      <li><strong>无缝接入</strong>：<code>checkout(stripeAdapter, 128.5)</code>，用起来跟支付宝一模一样。</li>
+      <li><strong>继续扩展</strong>：以后再接 PayPal，新写一个 <code>PayPalAdapter</code> 就行，付款代码一行不改。</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>🔍 代码走读</h2>
+    <p>下面是本仓库 TypeScript 实现的骨架（完整版见 <a href="../ts/adapter/main.ts">ts/adapter/main.ts</a>，有删减）：</p>
+    <div class="code-header">ts/adapter/main.ts（简化）</div>
+    <pre><code>// 第三方 SDK（被适配者）：只认"分"，接口和单位都对不上
+class StripePayment {
+  chargeInCents(amountInCents: number): string {
+    return `Stripe 扣款成功：${amountInCents} 分`;
+  }
+}
+
+// 目标接口：应用统一的支付接口，单位是"元"
+interface PaymentProcessor {
+  pay(yuan: number): string;
+}
+
+// 适配器：实现目标接口，怀里揣着第三方实例，负责翻译
+class StripeAdapter implements PaymentProcessor {
+  constructor(private readonly stripe: StripePayment) {}
+
+  pay(yuan: number): string {
+    const cents = Math.round(yuan * 100);    // 元 -> 分，四舍五入防浮点误差
+    return this.stripe.chargeInCents(cents); // 转手交给第三方
+  }
+}
+
+// 客户端：只认 PaymentProcessor，根本不知道有 Stripe 这回事
+function checkout(processor: PaymentProcessor, amount: number): void {
+  console.log(`应付金额：¥${amount.toFixed(2)}`);
+  console.log(processor.pay(amount));
+}
+
+checkout(new StripeAdapter(new StripePayment()), 128.5);</code></pre>
+    <div class="callout tip">
+      <p class="callout-title">看懂这段代码，就看懂了整个模式</p>
+      <p>适配器总共就干三件事：<strong>实现目标接口、持有被适配者、把调用翻译过去</strong>。它一行业务逻辑都不写，就是个纯转换头——越薄越好。</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚖️ 什么时候用，什么时候别用</h2>
+    <div class="two-col">
+      <div>
+        <h3>✅ 适合的场景</h3>
+        <ul class="checklist good">
+          <li>想用一个现成的类，但它的接口跟你的规范对不上，<strong>又改不了它的源码</strong>（第三方库、老代码）</li>
+          <li>要接入多个第三方实现，想让业务代码<strong>只依赖一套统一接口</strong></li>
+          <li>两边只是单位、命名、异常风格不一致，需要一层"翻译"</li>
+        </ul>
+      </div>
+      <div>
+        <h3>❌ 不适合的场景</h3>
+        <ul class="checklist bad">
+          <li>接口就一个地方用、差异就一两行——直接包个函数得了，别整个类</li>
+          <li>系统是你自己新写的——一开始就把接口设计对，别先乱设计再靠适配器打补丁</li>
+          <li>适配器越写越厚、塞满了 if——那不是翻译问题，是该重构了</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚠️ 容易踩的坑</h2>
+    <ul class="pitfalls">
+      <li><strong>把适配器当杂物间</strong>。翻译就好好翻译，别往里塞业务逻辑——否则第三方一换，业务逻辑跟着陪葬。</li>
+      <li><strong>一个适配器伺候太多接口</strong>。翻译支付又翻译物流还翻译日志，长成上帝类，改一处崩一片。</li>
+      <li><strong>选错适配方式</strong>。"类适配器"靠多重继承，TypeScript/Java 这类单继承语言玩不转；老实用"对象适配器"（组合持有），就像本仓库这样。</li>
+      <li><strong>胶水逻辑泄漏</strong>。单位换算这种事只能活在适配器里，一旦漏到调用方，等于白干。</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>🔗 和其他模式的关系</h2>
+    <ul>
+      <li>和<strong><a href="decorator.html">装饰器模式</a></strong>最容易混：都是"包一层"。区别在目的——<strong>适配器是改接口形状（对不上→对上），装饰器是加职责（功能变多），接口不变</strong>。</li>
+      <li>和<strong><a href="facade.html">外观模式</a></strong>同属"中间加一层"：适配器只翻译一个类的接口，外观是把一堆类打包成一个简单入口。</li>
+      <li>和<strong><a href="bridge.html">桥接模式</a></strong>是一先一后：桥接是提前设计好两边分离、各自变化；适配器是事后补救已经对不上的接口。</li>
+    </ul>
+  </section>
+
+  <div class="remember">
+    <span class="remember-label">一 句 话 记 住 它</span>
+    <strong>接口对不上，谁也别硬改——中间垫个转换头，两边都舒坦。</strong>
+  </div>
+
+  <section class="card">
+    <h2>📦 本仓库 9 种语言实现</h2>
+    <p>同一个支付转换头的例子，用 9 种语言各写了一遍，挑一个你顺手的对照着看：</p>
+    <div class="lang-links">
+      <a class="pill" href="../cpp/adapter/README.md">C++</a>
+      <a class="pill" href="../go/adapter/README.md">Go</a>
+      <a class="pill" href="../java/adapter/README.md">Java</a>
+      <a class="pill" href="../js/adapter/README.md">JavaScript</a>
+      <a class="pill" href="../objc/adapter/README.md">Objective-C</a>
+      <a class="pill" href="../python/adapter/README.md">Python</a>
+      <a class="pill" href="../rust/adapter/README.md">Rust</a>
+      <a class="pill" href="../swift/adapter/README.md">Swift</a>
+      <a class="pill" href="../ts/adapter/README.md">TypeScript</a>
+    </div>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="singleton.html"><span class="nav-label">← 上一个</span><span class="nav-title">单例模式</span></a>
+    <a class="next" href="bridge.html"><span class="nav-label">下一个 →</span><span class="nav-title">桥接模式</span></a>
+  </nav>
+
+</main>
+
+<footer class="site-footer">
+  <p>GoF 设计模式 · 大白话图解 —— 配套 <a href="../README.md">GoF 多语言实现仓库</a>（9 种语言 × 23 个模式）</p>
+</footer>
+
+</body>
+</html>

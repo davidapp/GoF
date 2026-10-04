@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GoF 设计模式 · 大白话图解 — 首页</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="index.html">📐 GoF 设计模式 · 大白话图解</a>
+    <nav class="crumbs">
+      <a href="#creational">创建型</a><span>/</span>
+      <a href="#structural">结构型</a><span>/</span>
+      <a href="#behavioral">行为型</a><span>/</span>
+      <a href="#howto">怎么学</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <section class="hero">
+    <h1>GoF 设计模式 · 大白话图解</h1>
+    <p class="hero-sub">23 个经典设计模式，每个一页：用生活里的比喻讲明白<strong>它是什么、由什么组成、什么时候用</strong>。不堆术语，只说人话。</p>
+    <div class="hero-chips">
+      <span class="chip">23 个模式</span>
+      <span class="chip">3 大分类</span>
+      <span class="chip">9 种语言实现对照</span>
+      <span class="chip">纯静态 · 无依赖</span>
+    </div>
+  </section>
+
+  <section class="legend">
+    <div class="legend-item" style="--cat: var(--creational)">
+      <strong>创建型（5 个）— 管"怎么生"</strong>
+      对象怎么造出来才省心：造几个、怎么造、造什么样的，都有讲究。
+    </div>
+    <div class="legend-item" style="--cat: var(--structural)">
+      <strong>结构型（7 个）— 管"怎么搭"</strong>
+      类和对象怎么组合才好用：小零件拼成大结构，接口不匹配想办法接上。
+    </div>
+    <div class="legend-item" style="--cat: var(--behavioral)">
+      <strong>行为型（11 个）— 管"怎么配合"</strong>
+      对象之间怎么分工沟通：谁负责什么、消息怎么传、活怎么派。
+    </div>
+  </section>
+
+  <section class="cat-section" id="creational">
+    <h2>🏗️ 创建型 · Creational</h2>
+    <p class="cat-intro">关注对象的创建机制：把"造对象"这件事本身也设计好，免得 new 满天飞。</p>
+    <div class="cards">
+      <a class="pcard" href="abstract-factory.html">
+        <span class="pcard-en">Abstract Factory</span>
+        <h3>抽象工厂</h3>
+        <p>一次订一整套配套的东西，换风格就整套换，绝不出现"现代沙发配古典茶几"。</p>
+        <span class="pcard-more">查看详解 →</span>
+      </a>
+      <a class="pcard" href="builder.html">
+        <span class="pcard-en">Builder</span>
+        <h3>建造者</h3>
+        <p>复杂对象不一口吃成，而是一步一步搭出来，搭完一次性交货。</p>
+        <span class="pcard-more">查看详解 →</span>
+      </a>
+      <a class="pcard" href="factory-method.html">
+        <span class="pcard-en">Factory Method</span>
+        <h3>工厂方法</h3>
+        <p>要什么跟工厂说一声就行，具体怎么造、造哪个，工厂自己定。</p>
+        <span class="pcard-more">查看详解 →</span>
+      </a>
+      <a class="pcard" href="prototype.html">
+        <span class="pcard-en">Prototype</span>
+        <h3>原型</h3>
+        <p>不从头造了：拿现成的复印一份，再改改就能用。</p>
+        <span class="pcard-more">查看详解 →</span>
+      </a>
+      <a class="pcard" href="singleton.html">
+        <span class="pcard-en">Singleton</span>
+        <h3>单例</h3>
+        <p>全局只此一份，谁来了见的都是同一个它。</p>
+        <span class="pcard-more">查看详解 →</span>
+      </a>
+    </div>
+  </section>
+
+  <section class="cat-section" id="structural">
+    <h2>🧱 结构型 · Structural</h2>
+    <p class="cat-intro">关注类与对象的组装：怎么把零件拼成好用的整体，接口不合时怎么接上。</p>
+    <div class="cards">
+      <a class="pcard" href="adapter.html">
+        <span class="pcard-en">Adapter</span>
+        <h3>适配器</h3>
+        <p>插头对不上插座？加个转换头，两边都不用改。</p>
+        <span class="pcard-more">查看详解 →</span>
+      </a>
+      <a class="pcard" href="bridge.html">
+        <span class="pcard-en">Bridge</span>
+        <h3>桥接</h3>
+        <p>两样东西各自变化太乱？分成两条线各变各的，中间架一座桥。</p>
+        <span class="pcard-more">查看详解 →</span>
+      </a>
+      <a class="pcard" href="composite.html">
+        <span class="pcard-en">Composite</span>
+        <h3>组合</h3>
+        <p>整体和部分一个待遇：文件夹和里面的文件，用同一套办法操作。</p>
+        <span class="pcard-more">查看详解 →</span>
+      </a>
+      <a class="pcard" href="decorator.html">
+        <span class="pcard-en">Decorator</span>
+        <h3>装饰器</h3>
+        <p>不动原来的类，给它一层层"加料"：加一层，多一份本事。</p>
+        <span class="pcard-more">查看详解 →</span>
+      </a>
+      <a class="pcard" href="facade.html">
+        <span class="pcard-en">Facade</span>
+        <h3>外观</h3>
+        <p>里面一堆按钮太吓人？开一扇门只留一个总开关。</p>
+        <span class="pcard-more">查看详解 →</span>
+      </a>
+      <a class="pcard" href="flyweight.html">
+        <span class="pcard-en">Flyweight</span>
+        <h3>享元</h3>
+        <p>一百万棵树共用同一份纹理：一样的东西只造一份，大家共享。</p>
+        <span class="pcard-more">查看详解 →</span>
+      </a>
+      <a class="pcard" href="proxy.html">
+        <span class="pcard-en">Proxy</span>
+        <h3>代理</h3>
+        <p>先派个替身挡在前面，能挡的挡掉，挡不住再请正主出场。</p>
+        <span class="pcard-more">查看详解 →</span>
+      </a>
+    </div>
+  </section>
+
+  <section class="cat-section" id="behavioral">
+    <h2>🎭 行为型 · Behavioral</h2>
+    <p class="cat-intro">关注对象之间的职责分配与沟通方式：活怎么派、消息怎么传、状态怎么切。</p>
+    <div class="cards">
+      <a class="pcard" href="chain-of-responsibility.html">
+        <span class="pcard-en">Chain of Responsibility</span>
+        <h3>责任链</h3>
+        <p>请求沿着一条链往下传，能处理就接手，处理不了递给下一位。</p>
+        <span class="pcard-more">查看详解 →</span>
+      </a>
+      <a class="pcard" href="command.html">
+        <span class="pcard-en">Command</span>
+        <h3>命令</h3>
+        <p>把"要做的事"打包成物件：能排队、能撤销、能记账。</p>
+        <span class="pcard-more">查看详解 →</span>
+      </a>
+      <a class="pcard" href="interpreter.html">
+        <span class="pcard-en">Interpreter</span>
+        <h3>解释器</h3>
+        <p>给一种小语言定好语法，句子来了逐条翻译执行。</p>
+        <span class="pcard-more">查看详解 →</span>
+      </a>
+      <a class="pcard" href="iterator.html">
+        <span class="pcard-en">Iterator</span>
+        <h3>迭代器</h3>
+        <p>不用知道容器内部长啥样，按顺序一个个往外拿。</p>
+        <span class="pcard-more">查看详解 →</span>
+      </a>
+      <a class="pcard" href="mediator.html">
+        <span class="pcard-en">Mediator</span>
+        <h3>中介者</h3>
+        <p>一群人两两私聊会乱成一团，不如拉个群，全只跟群主说话。</p>
+        <span class="pcard-more">查看详解 →</span>
+      </a>
+      <a class="pcard" href="memento.html">
+        <span class="pcard-en">Memento</span>
+        <h3>备忘录</h3>
+        <p>游戏存档/读档：把对象某个时刻的状态拍成快照存起来，后悔了就恢复。</p>
+        <span class="pcard-more">查看详解 →</span>
+      </a>
+      <a class="pcard" href="observer.html">
+        <span class="pcard-en">Observer</span>
+        <h3>观察者</h3>
+        <p>它一变，自动通知所有订阅它的人——公众号推送就是这么干的。</p>
+        <span class="pcard-more">查看详解 →</span>
+      </a>
+      <a class="pcard" href="state.html">
+        <span class="pcard-en">State</span>
+        <h3>状态</h3>
+        <p>不同状态下行为不同？把每个状态写成独立类，干掉一大坨 if-else。</p>
+        <span class="pcard-more">查看详解 →</span>
+      </a>
+      <a class="pcard" href="strategy.html">
+        <span class="pcard-en">Strategy</span>
+        <h3>策略</h3>
+        <p>同一件事有好几种做法，做法像插头一样随时换。</p>
+        <span class="pcard-more">查看详解 →</span>
+      </a>
+      <a class="pcard" href="template-method.html">
+        <span class="pcard-en">Template Method</span>
+        <h3>模板方法</h3>
+        <p>父类定好流程骨架，空出的步骤留给子类自己填。</p>
+        <span class="pcard-more">查看详解 →</span>
+      </a>
+      <a class="pcard" href="visitor.html">
+        <span class="pcard-en">Visitor</span>
+        <h3>访问者</h3>
+        <p>不动原来的类，把"新操作"做成访问者送上门来做。</p>
+        <span class="pcard-more">查看详解 →</span>
+      </a>
+    </div>
+  </section>
+
+  <section class="howto" id="howto">
+    <h2>🧭 怎么用这个站点</h2>
+    <ol class="steps">
+      <li><strong>挑一个模式进去</strong>，先看"生活里的例子"——比喻懂了，模式就懂了一半。</li>
+      <li>再看<strong>"角色构成"和"运转步骤"</strong>——搞清楚它由几块拼成、怎么转起来，这才是模式的骨架。</li>
+      <li>最后跳到<strong>"本仓库 9 种语言实现"</strong>，挑一门顺手的语言看完整代码；再横对比另一门，体会同一个模式的不同表达。</li>
+    </ol>
+    <p>💡 本站是纯静态页面（HTML + CSS，零 JavaScript），双击 <code>index.html</code> 就能离线浏览。所有示例代码来自 <a href="../README.md">本仓库</a> 的多语言实现，每个都能独立运行。</p>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <p>GoF 设计模式 · 大白话图解 —— 配套 <a href="../README.md">GoF 多语言实现仓库</a>（9 种语言 × 23 个模式）</p>
+</footer>
+
+</body>
+</html>

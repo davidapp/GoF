@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>享元模式 · Flyweight — GoF 设计模式大白话</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-category="structural">
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="index.html">📐 GoF 设计模式 · 大白话图解</a>
+    <nav class="crumbs">
+      <a href="index.html">首页</a><span>/</span>
+      <a href="index.html#structural">结构型</a><span>/</span>
+      <span class="current">享元</span>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <section class="pattern-hero">
+    <span class="badge">结构型</span>
+    <h1>享元模式 <small>Flyweight</small></h1>
+    <p class="one-liner">一句话：<strong>一万个长得一模一样的，只造一个大家轮着用；各自不同的那点差异，自己揣着。</strong></p>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="facade.html"><span class="nav-label">← 上一个</span><span class="nav-title">外观模式</span></a>
+    <a class="next" href="proxy.html"><span class="nav-label">下一个 →</span><span class="nav-title">代理模式</span></a>
+  </nav>
+
+  <section class="card">
+    <h2>🌰 生活里的例子</h2>
+    <div class="callout analogy">
+      <p class="callout-title">活字印刷</p>
+      <p>印一页书，里面出现了 50 个"的"字。刻字工人绝不会刻 50 个一模一样的"的"——他<strong>只刻一个铅字</strong>，排到哪一行哪个位置，就把这枚铅字拿到哪去用，用完放回字架，下个"的"字继续用它。</p>
+      <p>注意拆分的艺术：<strong>字的形状是死的、大家共用的</strong>（刻一次就够）；<strong>它在纸上的位置是活的、每个字各不相同</strong>（排一个记一个）。</p>
+    </div>
+    <p>对应到模式里：<strong>铅字是"享元"（内在状态：树种、颜色、纹理），字架连同查找规则是"享元工厂"（缓存），每个字在纸上的位置是"外在状态"（坐标）</strong>。共享不变的，各存各变的，内存就省下来了。</p>
+  </section>
+
+  <section class="card">
+    <h2>😖 没有它会怎样</h2>
+    <p>本仓库的例子是一片森林：游戏里要种成千上万棵树。如果每棵树都老老实实造一个"完整对象"：</p>
+    <div class="callout pain">
+      <p class="callout-title">直来直去的写法（问题代码）</p>
+      <p>每棵树自带全部数据：</p>
+      <p><code>new Tree(1, 1, "橡树", "深绿色", "粗糙树皮纹理图片")</code> × 一万次 ……</p>
+    </div>
+    <p>这样写眼下能跑，但麻烦在后头：</p>
+    <ul>
+      <li><strong>一万棵橡树，"橡树+深绿+粗糙纹理"这份数据就在内存里重复存了一万份</strong>——尤其纹理图片才是内存大户。</li>
+      <li><strong>真正因树而异的信息其实只有坐标两个数</strong>，99% 的内存花在了重复数据上。</li>
+      <li>对象多到这个量级，<strong>创建耗时、垃圾回收压力全跟着遭殃</strong>，帧率往下掉。</li>
+    </ul>
+    <p>根子上的问题是：<strong>没把"大家一样的"和"各不相同的"拆开</strong>，一股脑全塞进了每个对象。</p>
+  </section>
+
+  <section class="card">
+    <h2>👥 角色构成（这个模式由几块拼成）</h2>
+    <table>
+      <thead>
+        <tr><th>角色</th><th>大白话职责</th><th>本仓库示例里是谁</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>享元 Flyweight</strong></td>
+          <td>那枚铅字：装着<strong>内在状态</strong>（大家共用的部分），字段全 <code>readonly</code> 谁也改不了。</td>
+          <td><code>TreeType</code>（名字 / 颜色 / 纹理）</td>
+        </tr>
+        <tr>
+          <td><strong>享元工厂</strong></td>
+          <td>字架管理员：拿着缓存（<code>Map</code>），来要铅字先查架，有就给，没有才刻一枚。</td>
+          <td><code>TreeFactory</code>（静态 <code>cache</code> + <code>getTreeType()</code>）</td>
+        </tr>
+        <tr>
+          <td><strong>使用享元的对象</strong></td>
+          <td>轻得很：只存<strong>外在状态</strong>（坐标）加一个指向铅字的引用，别的一概不背。</td>
+          <td><code>Tree</code>（x、y、type 引用）</td>
+        </tr>
+        <tr>
+          <td><strong>客户端</strong></td>
+          <td>种树的人：报树种要铅字，从<strong>不直接 new 享元</strong>，一切走工厂。</td>
+          <td><code>Forest</code>（<code>plantTree</code> / <code>draw</code>）</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>解耦（把缠在一起的代码拆开，互不认识也能合作）关键在状态的一拆两半：<strong>不变的（长什么样）全局共享一份；变的（站在哪）各存各的</strong>。所以 <code>TreeType.draw(x, y)</code> 把坐标当参数临时传进来，而不是存在自己身上——享元身上一个可变字段都没有，共享才安全。</p>
+  </section>
+
+  <section class="card">
+    <h2>🗺️ 结构图（谁认识谁、谁调用谁）</h2>
+    <div class="diagram">
+      <div class="dbox">Forest<small>客户端 · 种树画树</small></div>
+      <div class="darrow">要树种<br><small>getTreeType(名,色,纹)</small></div>
+      <div class="dbox key">TreeFactory<small>享元工厂 · Map 缓存</small></div>
+      <div class="darrow">首次才 new<br><small>之后直接返回<br>缓存里那份</small></div>
+      <div class="dstack">
+        <div class="dbox key">TreeType「橡树」<small>内在状态 · 全林共享</small></div>
+        <div class="dbox key">TreeType「白桦」<small>内在状态 · 全林共享</small></div>
+        <div class="dbox">Tree × 6<small>外在状态 · 只有坐标+引用</small></div>
+      </div>
+    </div>
+    <p class="dcaption">箭头方向 = 调用方向：Forest 只找工厂要铅字，Tree 只引用铅字；一万棵树，铅字可能就两三枚。</p>
+  </section>
+
+  <section class="card">
+    <h2>🔄 运转步骤（跑一遍完整流程）</h2>
+    <ol class="steps">
+      <li><strong>种树</strong>：<code>forest.plantTree(1, 1, "橡树", "深绿色", "粗糙树皮")</code>——Forest 不自己 new 铅字。</li>
+      <li><strong>查缓存</strong>：<code>TreeFactory</code> 把参数拼成 key"橡树_深绿色_粗糙树皮"，先查 <code>Map</code>。</li>
+      <li><strong>首次才造</strong>：缓存没有，new 一个 <code>TreeType</code> 存进去；这是这个树种唯一的一次创建。</li>
+      <li><strong>之后白拿</strong>：后面再种五棵橡树，同一个 key 次次命中，返回的都是同一枚铅字。</li>
+      <li><strong>造轻对象</strong>：<code>new Tree(x, y, type)</code>——只带坐标和一个引用，轻得像张纸条。</li>
+      <li><strong>绘制</strong>：<code>tree.draw()</code> 把坐标传给共享的 <code>type.draw(x, y)</code>，同一枚铅字在六个位置各印出一棵树。结果：6 棵树，只有 2 个 <code>TreeType</code>。</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>🔍 代码走读</h2>
+    <p>下面是本仓库 TypeScript 实现的骨架（完整版见 <a href="../ts/flyweight/main.ts">ts/flyweight/main.ts</a>，有删减）：</p>
+    <div class="code-header">ts/flyweight/main.ts（简化）</div>
+    <pre><code>// 享元：内在状态（树种/颜色/纹理），全 readonly —— 谁也改不了
+class TreeType {
+  constructor(
+    public readonly name: string,
+    public readonly color: string,
+    public readonly texture: string,
+  ) {}
+  draw(x: number, y: number): string { // 坐标是外在状态，用时才传进来
+    return `在 (${x}, ${y}) 绘制一棵【${this.name}】`;
+  }
+}
+
+// 享元工厂：按 key 缓存，同一个树种只造一次
+class TreeFactory {
+  private static readonly cache = new Map&lt;string, TreeType&gt;();
+
+  static getTreeType(name: string, color: string, texture: string): TreeType {
+    const key = `${name}_${color}_${texture}`;
+    let type = TreeFactory.cache.get(key);
+    if (type === undefined) {
+      type = new TreeType(name, color, texture); // 首次：真造一个
+      TreeFactory.cache.set(key, type);          // 存回字架
+    }
+    return type; // 之后：直接给缓存里那枚
+  }
+}
+
+// Tree：只存外在状态（坐标）+ 一个共享引用，轻得很
+class Tree {
+  constructor(
+    private readonly x: number,
+    private readonly y: number,
+    private readonly type: TreeType, // 指向共享的铅字
+  ) {}
+  draw(): string { return this.type.draw(this.x, this.y); }
+}
+
+// 客户端：种六棵树，铅字只出两枚
+forest.plantTree(1, 1, "橡树", "深绿色", "粗糙树皮");
+forest.plantTree(3, 8, "白桦", "浅绿色", "光滑树皮");</code></pre>
+    <div class="callout tip">
+      <p class="callout-title">看懂这段代码，就看懂了整个模式</p>
+      <p>灵魂就一句：<strong><code>Tree</code> 身上没有树名、没有颜色、没有纹理，只有一个引用</strong>。把共享数据从一万个小对象里抽出去，只留一份挂在工厂的 <code>Map</code> 上——省下的就是赚到的。</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚖️ 什么时候用，什么时候别用</h2>
+    <div class="two-col">
+      <div>
+        <h3>✅ 适合的场景</h3>
+        <ul class="checklist good">
+          <li>要造<strong>海量对象</strong>（成千上万），内存真的吃不消——树、粒子、地图格子、字符</li>
+          <li>对象的大部分状态都重复，<strong>能干净地拆成"共享+各变"两块</strong></li>
+          <li>不在乎对象身份——用不用的是同一个实例，业务看不出来也不在意</li>
+        </ul>
+      </div>
+      <div>
+        <h3>❌ 不适合的场景</h3>
+        <ul class="checklist bad">
+          <li>对象就几百个——省的那点内存，抵不上多写的一层工厂和间接</li>
+          <li>状态几乎个个不同，根本抽不出可共享的内在状态——缓存命中率归零</li>
+          <li>业务依赖"这是不是同一个对象"（身份比较）——共享会直接改出 bug</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚠️ 容易踩的坑</h2>
+    <ul class="pitfalls">
+      <li><strong>内在状态不是不可变的</strong>。哪个缺德的在共享的 <code>TreeType</code> 上改了个颜色，全森林的橡树当场集体变色。所以字段必须 <code>readonly</code>，本仓库就是这么做的。</li>
+      <li><strong>外在状态混进享元</strong>。把坐标存进 <code>TreeType</code>，缓存 key 永不重复，每个"树种"都是新的——享元瞬间退化成普通对象，白忙一场。</li>
+      <li><strong>只算数量不算账</strong>。享元自己也是要占内存的：种类多到跟对象数差不多时，共享就没得赚，先测再上。</li>
+      <li><strong>线程环境下裸奔缓存</strong>。多线程同时"首次创建"同一 key，可能造出两份铅字——缓存得是并发安全的。</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>🔗 和其他模式的关系</h2>
+    <ul>
+      <li>和<strong><a href="singleton.html">单例模式</a></strong>是亲戚：<strong>单例是"全局只此一份"，享元是"每种只此一份"</strong>——可以看作把单例推广成了"按种类共享"。</li>
+      <li>和<strong><a href="composite.html">组合模式</a></strong>常搭伙：树形结构里大量相似的叶子节点，正好用享元共享，一棵 UI 树千千万万个图标就是两回事合一处。</li>
+      <li>享元工厂本质是个<strong><a href="factory-method.html">工厂</a></strong>——只是多了张缓存表，造过的不再造。</li>
+    </ul>
+  </section>
+
+  <div class="remember">
+    <span class="remember-label">一 句 话 记 住 它</span>
+    <strong>一样的只造一个大家共用，不一样的自己揣着走。</strong>
+  </div>
+
+  <section class="card">
+    <h2>📦 本仓库 9 种语言实现</h2>
+    <p>同一片共享树种的森林，用 9 种语言各写了一遍，挑一个你顺手的对照着看：</p>
+    <div class="lang-links">
+      <a class="pill" href="../cpp/flyweight/README.md">C++</a>
+      <a class="pill" href="../go/flyweight/README.md">Go</a>
+      <a class="pill" href="../java/flyweight/README.md">Java</a>
+      <a class="pill" href="../js/flyweight/README.md">JavaScript</a>
+      <a class="pill" href="../objc/flyweight/README.md">Objective-C</a>
+      <a class="pill" href="../python/flyweight/README.md">Python</a>
+      <a class="pill" href="../rust/flyweight/README.md">Rust</a>
+      <a class="pill" href="../swift/flyweight/README.md">Swift</a>
+      <a class="pill" href="../ts/flyweight/README.md">TypeScript</a>
+    </div>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="facade.html"><span class="nav-label">← 上一个</span><span class="nav-title">外观模式</span></a>
+    <a class="next" href="proxy.html"><span class="nav-label">下一个 →</span><span class="nav-title">代理模式</span></a>
+  </nav>
+
+</main>
+
+<footer class="site-footer">
+  <p>GoF 设计模式 · 大白话图解 —— 配套 <a href="../README.md">GoF 多语言实现仓库</a>（9 种语言 × 23 个模式）</p>
+</footer>
+
+</body>
+</html>

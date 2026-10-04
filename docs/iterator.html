@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>迭代器模式 · Iterator — GoF 设计模式大白话</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-category="behavioral">
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="index.html">📐 GoF 设计模式 · 大白话图解</a>
+    <nav class="crumbs">
+      <a href="index.html">首页</a><span>/</span>
+      <a href="index.html#behavioral">行为型</a><span>/</span>
+      <span class="current">迭代器</span>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <section class="pattern-hero">
+    <span class="badge">行为型</span>
+    <h1>迭代器模式 <small>Iterator</small></h1>
+    <p class="one-liner">一句话：<strong>请一位导游带你挨个参观集合里的元素，集合内部到底是怎么摆放的，你一概不用知道。</strong></p>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="interpreter.html"><span class="nav-label">← 上一个</span><span class="nav-title">解释器模式</span></a>
+    <a class="next" href="mediator.html"><span class="nav-label">下一个 →</span><span class="nav-title">中介者模式</span></a>
+  </nav>
+
+  <section class="card">
+    <h2>🌰 生活里的例子</h2>
+    <div class="callout analogy">
+      <p class="callout-title">博物馆的讲解员</p>
+      <p>你参观博物馆，不需要仓库钥匙，也不用知道哪件展品锁在哪个柜子——只要<strong>跟着讲解员走</strong>。讲解员心里有一条路线：带你看一件，再看下一件。你只管问一句"还有吗？"（有），他就带你看下一个。看完了，他说"没了"，参观结束。</p>
+      <p>朋友中途加入、想从头看一遍？<strong>再领一位讲解员</strong>就是——两条路线各走各的，互不干扰。讲解员哪天调整路线（先看青铜器再看瓷器），你照样跟着走，看法一点没变。</p>
+    </div>
+    <p>这个比喻对应模式里的什么：讲解员 = <strong>迭代器</strong>（BookIterator），他记的"走到第几件" = 游标 <code>index</code>；博物馆 = <strong>聚合</strong>（BookCollection），展柜怎么布局（数组还是链表）你不知道也不用知道；"还有吗 / 下一个" = <code>hasNext()</code> / <code>next()</code>；再领一位讲解员 = 再 <code>createIterator()</code> 一个，多个遍历同时进行、互不踩脚。</p>
+  </section>
+
+  <section class="card">
+    <h2>😖 没有它会怎样</h2>
+    <p>本仓库的场景是<strong>图书藏书</strong>：<code>BookCollection</code> 里存着一堆书，外部想挨本翻一翻。最直接的写法是让集合把内部家底直接交出来：</p>
+    <div class="callout pain">
+      <p class="callout-title">直来直去的写法（问题代码）</p>
+      <p>集合暴露内部数组，调用方自己按下标遍历：</p>
+      <p><code>const books = library.getBooks();</code> 然后 <code>for (let i = 0; i &lt; books.length; i++) { ... }</code></p>
+    </div>
+    <p>这样写眼下能跑，但麻烦在后头：</p>
+    <ul>
+      <li><strong>内部结构彻底暴露</strong>："我用数组存的"成了公开秘密。哪天想换成链表、换成数据库懒加载，所有调用方代码全得改。</li>
+      <li><strong>想两个人同时遍历？游标没地方放</strong>——放在集合身上只有一份，A 走到第 2 本，B 就只能从第 3 本接着看。</li>
+      <li><strong>各种集合各自发明遍历写法</strong>：书架一套、队列一套、树又一套，调用方每换一种集合就得学一套新招。</li>
+    </ul>
+    <p>根子上的问题是<strong>把"怎么存"和"怎么走"搅在一起了</strong>。拆开的办法：集合继续管存，另请一位"导游"专门管走。</p>
+  </section>
+
+  <section class="card">
+    <h2>👥 角色构成（这个模式由几块拼成）</h2>
+    <table>
+      <thead>
+        <tr><th>角色</th><th>大白话职责</th><th>本仓库示例里是谁</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>抽象迭代器</strong></td>
+          <td>定规矩："导游只要会两招——还有吗（hasNext）、下一个（next）"。</td>
+          <td><code>CustomIterator&lt;T&gt;</code> 接口</td>
+        </tr>
+        <tr>
+          <td><strong>具体迭代器</strong></td>
+          <td>真导游。自己保管游标，替集合跑腿，一个元素一个元素往外递。</td>
+          <td><code>BookIterator</code></td>
+        </tr>
+        <tr>
+          <td><strong>抽象聚合</strong></td>
+          <td>定规矩："想被遍历？请提供 createIterator() 发导游"。</td>
+          <td><code>Aggregate&lt;T&gt;</code> 接口</td>
+        </tr>
+        <tr>
+          <td><strong>具体聚合</strong></td>
+          <td>博物馆本体。数据怎么存是它的私事；要几个导游就发几个。</td>
+          <td><code>BookCollection</code>（同时实现了 TS 原生的 <code>Iterable&lt;Book&gt;</code> 协议）</td>
+        </tr>
+        <tr>
+          <td><strong>元素</strong></td>
+          <td>被参观的展品。</td>
+          <td><code>Book</code> 接口</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>解耦关键在哪：<strong>调用方只认识"hasNext / next"这两个问题，集合只负责发导游，数组下标一个都不外泄</strong>。内部今天用数组、明天换链表，调用方代码一字不改——这就是解耦（把缠在一起的代码拆开，互不认识也能合作）。</p>
+  </section>
+
+  <section class="card">
+    <h2>🗺️ 结构图（谁认识谁、谁调用谁）</h2>
+    <div class="diagram">
+      <div class="dbox">main 客户端<small>只问两个问题</small></div>
+      <div class="darrow">→<br><small>hasNext() / next()</small></div>
+      <div class="dbox key">BookIterator<small>具体迭代器 · 拿着游标 index</small></div>
+      <div class="darrow">→<br><small>领任务时替集合<br>保管内部 books 数组</small></div>
+      <div class="dbox">BookCollection<small>具体聚合 · 数据藏在内</small></div>
+    </div>
+    <p class="dcaption">客户端先用 collection.createIterator() 领一个导游，之后只跟导游一问一答；books 数组从头到尾没露过面。要第二个导游？再 createIterator 一次，两个游标互不干扰。</p>
+  </section>
+
+  <section class="card">
+    <h2>🔄 运转步骤（跑一遍完整流程）</h2>
+    <ol class="steps">
+      <li><strong>装书</strong>：<code>library.addBook(...)</code> 放进《设计模式》《重构》《代码整洁之道》三本——内部用数组存，外界不知道。</li>
+      <li><strong>领导游</strong>：<code>library.createIterator()</code> 得到一个 <code>BookIterator</code>，游标指着第 0 本。</li>
+      <li><strong>问</strong>：<code>hasNext()</code>——游标还没走到头？有，继续。</li>
+      <li><strong>取</strong>：<code>next()</code> 返回当前这本，游标悄悄前移一格。</li>
+      <li><strong>循环</strong>：一问一取，直到 <code>hasNext()</code> 说"没了"，遍历结束。</li>
+      <li><strong>换原生姿势再来一遍</strong>：同一个 <code>library</code> 直接 <code>for...of</code> 遍历、<code>[...library]</code> 展开——因为它还实现了 <code>Symbol.iterator</code> 协议，这是迭代器在现代语言里的"隐形"形态。</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>🔍 代码走读</h2>
+    <p>下面是本仓库 TypeScript 实现的骨架（完整版见 <a href="../ts/iterator/main.ts">ts/iterator/main.ts</a>，有删减）：</p>
+    <div class="code-header">ts/iterator/main.ts（简化）</div>
+    <pre><code>// 抽象迭代器：只约定两个问题——"还有吗"和"给我下一个"
+interface CustomIterator&lt;T&gt; {
+  hasNext(): boolean;
+  next(): T;
+}
+
+// 具体迭代器：自己保管游标，替集合跑腿
+class BookIterator implements CustomIterator&lt;Book&gt; {
+  private index = 0;                    // 游标：现在走到第几本
+
+  constructor(private readonly books: readonly Book[]) {}
+
+  hasNext(): boolean { return this.index &lt; this.books.length; }
+
+  next(): Book {
+    if (!this.hasNext()) throw new Error("已到达集合末尾");
+    return this.books[this.index++]!;  // 交出当前这本，游标前移
+  }
+}
+
+// 具体聚合：内部用数组存书，但一个下标都不外泄
+class BookCollection implements Aggregate&lt;Book&gt;, Iterable&lt;Book&gt; {
+  private readonly books: Book[] = [];
+
+  addBook(book: Book): void { this.books.push(book); }
+
+  createIterator(): CustomIterator&lt;Book&gt; {
+    return new BookIterator(this.books);   // 发一个新导游
+  }
+
+  // 顺手实现语言原生协议，白得 for...of 和展开运算符
+  [Symbol.iterator](): Iterator&lt;Book&gt; {
+    let index = 0;
+    const books = this.books;
+    return {
+      next() {
+        return index &lt; books.length
+          ? { value: books[index++]!, done: false }
+          : { value: undefined, done: true };
+      },
+    };
+  }
+}</code></pre>
+    <div class="callout tip">
+      <p class="callout-title">看懂这段代码，就看懂了整个模式</p>
+      <p>核心就两行：<strong>hasNext 比一比游标和长度，next 交出当前元素再前移游标</strong>。下半段那个 <code>[Symbol.iterator]</code> 是同一思想在 TS/JS 里的官方形态——语言干脆把迭代器定成了协议，<code>for...of</code> 才能通吃数组、Map、Set 和你自己的集合。</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚖️ 什么时候用，什么时候别用</h2>
+    <div class="two-col">
+      <div>
+        <h3>✅ 适合的场景</h3>
+        <ul class="checklist good">
+          <li>想让人遍历，但<strong>不想暴露内部结构</strong>（下标、指针这些家底不外泄）</li>
+          <li>同一集合要<strong>多种遍历方式</strong>，或<strong>多个遍历同时进行</strong>——各自领导游，游标互不干扰</li>
+          <li>想给各种集合一个<strong>统一的遍历接口</strong>：for...of 能通吃数组、Map、Set、自定义集合，靠的就是它</li>
+        </ul>
+      </div>
+      <div>
+        <h3>❌ 不适合的场景</h3>
+        <ul class="checklist bad">
+          <li>自己用的小数组、调用方就一处——直接 for 循环，请导游纯属多余</li>
+          <li>需要<strong>随机访问</strong>（直接跳到第 3 个、第 7 个）——迭代器只会一步一步顺着走</li>
+          <li>遍历过程中要频繁增删元素——游标和结构改动容易打架，多数迭代器直接禁止这么做</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚠️ 容易踩的坑</h2>
+    <ul class="pitfalls">
+      <li><strong>边遍历边改集合</strong>。走到第 3 本时删掉第 2 本，游标当场错位，要么漏元素要么越界。要改就先记下来，遍历完再改。</li>
+      <li><strong>一个迭代器俩人共用</strong>。A 和 B 拿着同一个迭代器轮流 next()，游标是共享的，看到一半发现"怎么少了几本"。各用各的 <code>createIterator()</code>。</li>
+      <li><strong>不看 hasNext 就 next()</strong>。走过头直接抛异常（本例会 throw "已到达集合末尾"）。先问再取，别抢答。</li>
+      <li><strong>现代语言里重复造轮子</strong>。TS/JS 已把迭代器内建成语言协议（<code>Symbol.iterator</code> + <code>for...of</code>），手写 hasNext/next 多半是为了学结构；实际项目优先实现原生协议。</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>🔗 和其他模式的关系</h2>
+    <ul>
+      <li><strong><a href="composite.html">组合模式</a></strong>常配迭代器：树形的组合结构配一个迭代器，就能把整棵树当平面序列，一层层遍历给外界。</li>
+      <li>和<strong><a href="visitor.html">访问者模式</a></strong>是好搭档：迭代器负责"带路"（挨个取出元素），访问者负责"办事"（对每个元素执行操作）。</li>
+      <li><code>createIterator()</code> 本质是个<strong><a href="factory-method.html">工厂方法</a></strong>：聚合对象负责"造出"属于自己的迭代器，造哪种它说了算。</li>
+    </ul>
+  </section>
+
+  <div class="remember">
+    <span class="remember-label">一 句 话 记 住 它</span>
+    <strong>请个导游带你挨个看，仓库怎么摆是它的事，你只管问："还有吗？下一个！"</strong>
+  </div>
+
+  <section class="card">
+    <h2>📦 本仓库 9 种语言实现</h2>
+    <p>同一个图书集合遍历的例子，用 9 种语言各写了一遍，挑一个你顺手的对照着看：</p>
+    <div class="lang-links">
+      <a class="pill" href="../cpp/iterator/README.md">C++</a>
+      <a class="pill" href="../go/iterator/README.md">Go</a>
+      <a class="pill" href="../java/iterator/README.md">Java</a>
+      <a class="pill" href="../js/iterator/README.md">JavaScript</a>
+      <a class="pill" href="../objc/iterator/README.md">Objective-C</a>
+      <a class="pill" href="../python/iterator/README.md">Python</a>
+      <a class="pill" href="../rust/iterator/README.md">Rust</a>
+      <a class="pill" href="../swift/iterator/README.md">Swift</a>
+      <a class="pill" href="../ts/iterator/README.md">TypeScript</a>
+    </div>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="interpreter.html"><span class="nav-label">← 上一个</span><span class="nav-title">解释器模式</span></a>
+    <a class="next" href="mediator.html"><span class="nav-label">下一个 →</span><span class="nav-title">中介者模式</span></a>
+  </nav>
+
+</main>
+
+<footer class="site-footer">
+  <p>GoF 设计模式 · 大白话图解 —— 配套 <a href="../README.md">GoF 多语言实现仓库</a>（9 种语言 × 23 个模式）</p>
+</footer>
+
+</body>
+</html>

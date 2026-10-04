@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>原型模式 · Prototype — GoF 设计模式大白话</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-category="creational">
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="index.html">📐 GoF 设计模式 · 大白话图解</a>
+    <nav class="crumbs">
+      <a href="index.html">首页</a><span>/</span>
+      <a href="index.html#creational">创建型</a><span>/</span>
+      <span class="current">原型</span>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <section class="pattern-hero">
+    <span class="badge">创建型</span>
+    <h1>原型模式 <small>Prototype</small></h1>
+    <p class="one-liner">一句话：<strong>不从零造，直接复印一份现成的，改两笔就是新的。</strong></p>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="factory-method.html"><span class="nav-label">← 上一个</span><span class="nav-title">工厂方法模式</span></a>
+    <a class="next" href="singleton.html"><span class="nav-label">下一个 →</span><span class="nav-title">单例模式</span></a>
+  </nav>
+
+  <section class="card">
+    <h2>🌰 生活里的例子</h2>
+    <div class="callout analogy">
+      <p class="callout-title">复印一份排好版的申请表</p>
+      <p>你花了一下午把申请表排版调到完美：字体、字号、页边距全弄妥了。现在要交给 10 个部门，每个部门还都要求小改：这家要填手机号，那家要换日期。你<strong>绝不会重新排版 10 遍</strong>，而是复印 10 份，在复印件上各自涂改——<strong>原件永远干干净净</strong>。</p>
+      <p>如果这 10 个部门明年还要同样的表？把原件塞进文件柜贴个标签，随取随复印。</p>
+    </div>
+    <p>对应到模式里：<strong>原件就是原型对象</strong>（一个调好属性的 <code>Circle</code>），<strong>复印就是 <code>clone()</code></strong>，<strong>复印件上随便改</strong>（克隆体和原件互不影响），<strong>文件柜就是原型注册表</strong>（按名字存模板的 <code>Map</code>）。</p>
+  </section>
+
+  <section class="card">
+    <h2>😖 没有它会怎样</h2>
+    <p>本仓库的示例是<strong>图形编辑器</strong>：画布上要生成一堆相似的图形，比如 20 个"红色、半径 5 的圆"，只是位置各不相同。最直接的写法是每次都从头 new：</p>
+    <div class="callout pain">
+      <p class="callout-title">直来直去的写法（问题代码）</p>
+      <p><code>new Circle("红色", 10, 20, 5)</code></p>
+      <p><code>new Circle("红色", 30, 40, 5)</code></p>
+      <p><code>new Circle("红色", 50, 60, 5)</code> ……</p>
+      <p>参数一个个重填。更狠的情况：这个对象是查了三张数据库表、读了个大文件才拼出来的，难道每次都重来一遍？</p>
+    </div>
+    <p>这样写的麻烦：</p>
+    <ul>
+      <li><strong>重复劳动</strong>：模板属性要一遍遍抄，抄漏一个参数不报错，直接埋 bug。</li>
+      <li><strong>构造成本高的对象反复构造</strong>：查库、读文件、调接口的活儿每次重干，性能白白烧掉。</li>
+      <li><strong>想要"和那个一模一样、只改一点"的副本</strong>：手动重填等于逼你把人家的内部字段全看一遍，费劲还容易错。</li>
+    </ul>
+    <p>根子上的问题是<strong>把"造新对象"等同于"从零开始"</strong>——明明旁边就有一份现成的，复印比重做快多了。</p>
+  </section>
+
+  <section class="card">
+    <h2>👥 角色构成（这个模式由几块拼成）</h2>
+    <table>
+      <thead>
+        <tr><th>角色</th><th>大白话职责</th><th>本仓库示例里是谁</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>原型接口 Prototype</strong></td>
+          <td>一句合同："会自己复印自己。"</td>
+          <td><code>Prototype&lt;T&gt;</code> 接口（<code>clone()</code>）</td>
+        </tr>
+        <tr>
+          <td><strong>抽象原型</strong></td>
+          <td>把公共字段（颜色、坐标）放这里，搭好克隆的架子。</td>
+          <td><code>Shape</code> 抽象类</td>
+        </tr>
+        <tr>
+          <td><strong>具体原型</strong></td>
+          <td>自己最懂自己有哪些字段，new 一个同类对象、逐个抄进去。</td>
+          <td><code>Circle</code>、<code>Rectangle</code></td>
+        </tr>
+        <tr>
+          <td><strong>原型注册表</strong></td>
+          <td>按名字保管一批"标准原件"的文件柜，要货时直接复印。</td>
+          <td><code>registry</code>（<code>Map&lt;string, Shape&gt;</code>）</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>解耦关键：<strong>客户端想要新对象，只要手里有一个现成的，调 <code>clone()</code> 就行</strong>——不需要知道它的类叫什么、不需要调用它的构造函数。配上注册表，甚至用字符串名字就能拿到模板复印。</p>
+  </section>
+
+  <section class="card">
+    <h2>🗺️ 结构图（谁认识谁、谁调用谁）</h2>
+    <div class="diagram">
+      <div class="dbox">原型注册表<small>Map：按名字存模板的柜子</small></div>
+      <div class="darrow">get("small-circle")<br><small>取原件</small></div>
+      <div class="dbox key">Circle 原型<small>原件：调好的一份模板</small></div>
+      <div class="darrow">clone()<br><small>逐字段复印</small></div>
+      <div class="dstack">
+        <div class="dbox">克隆体 A<small>改成蓝色、挪到 (100,20)</small></div>
+        <div class="dbox">克隆体 B<small>和原件互不影响</small></div>
+      </div>
+    </div>
+    <p class="dcaption">箭头方向 = 调用方向：谁想要副本谁调 clone()；注册表只是替你保管原件的柜子，柜里每份原型都能无限次复印。</p>
+  </section>
+
+  <section class="card">
+    <h2>🔄 运转步骤（跑一遍完整流程）</h2>
+    <ol class="steps">
+      <li><strong>造原件</strong>：精心 <code>new Circle("红色", 10, 20, 5)</code>，把属性都调到满意。</li>
+      <li><strong>复印</strong>：<code>original.clone()</code> 返回一个全新的 <code>Circle</code>，字段和原件一模一样。</li>
+      <li><strong>验明正身</strong>：<code>original === cloned</code> 结果是 <code>false</code>——两个对象，内存里各占各的。</li>
+      <li><strong>改副本</strong>：把克隆体的 <code>x</code> 改成 100、颜色改成"蓝色"，回头看原件纹丝不动。</li>
+      <li><strong>存柜</strong>：把常用模板放进注册表，比如 <code>["small-circle", new Circle("黑色", 0, 0, 1)]</code>。</li>
+      <li><strong>批量取</strong>：要货时 <code>registry.get("small-circle").clone()</code>，随取随复印，取多少份互不干扰。</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>🔍 代码走读</h2>
+    <p>下面是本仓库 TypeScript 实现的骨架（完整版见 <a href="../ts/prototype/main.ts">ts/prototype/main.ts</a>，有删减）：</p>
+    <div class="code-header">ts/prototype/main.ts（简化）</div>
+    <pre><code>// 原型接口：会克隆自己的对象
+interface Prototype&lt;T&gt; {
+  clone(): T;
+}
+
+// 抽象原型：公共字段 + 抽象 clone
+abstract class Shape implements Prototype&lt;Shape&gt; {
+  constructor(public color: string, public x: number, public y: number) {}
+  abstract clone(): Shape;
+}
+
+// 具体原型：new 一个同类对象，逐字段抄进去
+class Circle extends Shape {
+  constructor(color: string, x: number, y: number, public radius: number) {
+    super(color, x, y);
+  }
+  clone(): Circle {
+    return new Circle(this.color, this.x, this.y, this.radius);
+  }
+}
+
+// 用法：改克隆体，原型毫发无损
+const original = new Circle("红色", 10, 20, 5);
+const cloned = original.clone();
+cloned.x = 100;         // 只改克隆体
+cloned.color = "蓝色";
+original === cloned;    // false —— 两个不同的实例
+
+// 原型注册表：按名字存模板，要时直接复印
+const registry = new Map&lt;string, Shape&gt;([
+  ["small-circle", new Circle("黑色", 0, 0, 1)],
+  ["big-rect", new Rectangle("白色", 0, 0, 100, 50)],
+]);
+const copy = registry.get("small-circle")!.clone();</code></pre>
+    <div class="callout tip">
+      <p class="callout-title">看懂这段代码，就看懂了整个模式</p>
+      <p><code>clone()</code> 的套路就一句话：<strong>new 一个同类的对象，把自己每个字段抄进去</strong>。本例字段全是数字和字符串（值类型），抄值就够；字段里有对象、数组时得考虑深拷贝（连引用的东西也一起复印），否则踩共享坑。</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚖️ 什么时候用，什么时候别用</h2>
+    <div class="two-col">
+      <div>
+        <h3>✅ 适合的场景</h3>
+        <ul class="checklist good">
+          <li>对象<strong>构造成本高</strong>（查库、读文件、复杂计算），复制比重建划算得多</li>
+          <li>要批量生成<strong>"相似但各自微调"</strong>的对象（图形、怪物、配置副本）</li>
+          <li>运行时按名字/配置动态决定用哪种对象，且种类不多</li>
+        </ul>
+      </div>
+      <div>
+        <h3>❌ 不适合的场景</h3>
+        <ul class="checklist bad">
+          <li>对象就几个值字段、构造便宜——直接 new，克隆反而多此一举</li>
+          <li>字段大量是引用类型、嵌套深——深拷贝又贵又容易写错</li>
+          <li>每个新对象都必须走完整构造逻辑（初始化、注册、校验）——clone 会绕过构造函数</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚠️ 容易踩的坑</h2>
+    <ul class="pitfalls">
+      <li><strong>浅拷贝的共享坑</strong>。字段里有数组或对象时，默认只抄"地址"，克隆体和原件共用同一份内部数据，改一个动两个，bug 藏得极深。</li>
+      <li><strong>漏抄新字段</strong>。类里新加字段忘了同步改 <code>clone()</code>，克隆出来的对象缺胳膊少腿，编译器还不报错。</li>
+      <li><strong>绕过构造函数</strong>。clone 不走 constructor，构造函数里的副作用（计数、日志、注册监听）统统不会执行，行为悄悄变了样。</li>
+      <li><strong>循环引用</strong>。对象互相指着对方时深拷贝容易死循环，得专门处理"抄过了就不再抄"。</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>🔗 和其他模式的关系</h2>
+    <ul>
+      <li>常与<strong><a href="factory-method.html">工厂方法模式</a></strong>合体：工厂里存一份原型，<code>create()</code> 时返回 <code>clone()</code> 而不是 <code>new</code>，省掉重复构造。</li>
+      <li>和<strong><a href="singleton.html">单例模式</a></strong>是两个极端：单例全程序只此一份、严禁复制；原型是使劲复制，副本越多越好。</li>
+      <li>"复印一份留底、以后恢复原样"这个动作，正是<strong><a href="memento.html">备忘录模式</a></strong>的核心玩法，两者思路同源。</li>
+    </ul>
+  </section>
+
+  <div class="remember">
+    <span class="remember-label">一 句 话 记 住 它</span>
+    <strong>不会做？复印一份现成的，改改就是新的。</strong>
+  </div>
+
+  <section class="card">
+    <h2>📦 本仓库 9 种语言实现</h2>
+    <p>同一个图形克隆的例子，用 9 种语言各写了一遍，挑一个你顺手的对照着看：</p>
+    <div class="lang-links">
+      <a class="pill" href="../cpp/prototype/README.md">C++</a>
+      <a class="pill" href="../go/prototype/README.md">Go</a>
+      <a class="pill" href="../java/prototype/README.md">Java</a>
+      <a class="pill" href="../js/prototype/README.md">JavaScript</a>
+      <a class="pill" href="../objc/prototype/README.md">Objective-C</a>
+      <a class="pill" href="../python/prototype/README.md">Python</a>
+      <a class="pill" href="../rust/prototype/README.md">Rust</a>
+      <a class="pill" href="../swift/prototype/README.md">Swift</a>
+      <a class="pill" href="../ts/prototype/README.md">TypeScript</a>
+    </div>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="factory-method.html"><span class="nav-label">← 上一个</span><span class="nav-title">工厂方法模式</span></a>
+    <a class="next" href="singleton.html"><span class="nav-label">下一个 →</span><span class="nav-title">单例模式</span></a>
+  </nav>
+
+</main>
+
+<footer class="site-footer">
+  <p>GoF 设计模式 · 大白话图解 —— 配套 <a href="../README.md">GoF 多语言实现仓库</a>（9 种语言 × 23 个模式）</p>
+</footer>
+
+</body>
+</html>

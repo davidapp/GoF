@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>模板方法模式 · Template Method — GoF 设计模式大白话</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-category="behavioral">
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="index.html">📐 GoF 设计模式 · 大白话图解</a>
+    <nav class="crumbs">
+      <a href="index.html">首页</a><span>/</span>
+      <a href="index.html#behavioral">行为型</a><span>/</span>
+      <span class="current">模板方法</span>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <section class="pattern-hero">
+    <span class="badge">行为型</span>
+    <h1>模板方法模式 <small>Template Method</small></h1>
+    <p class="one-liner">一句话：<strong>父类把流程的先后顺序焊死，每一步具体怎么干，留给子类去填空。</strong></p>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="strategy.html"><span class="nav-label">← 上一个</span><span class="nav-title">策略模式</span></a>
+    <a class="next" href="visitor.html"><span class="nav-label">下一个 →</span><span class="nav-title">访问者模式</span></a>
+  </nav>
+
+  <section class="card">
+    <h2>🌰 生活里的例子</h2>
+    <div class="callout analogy">
+      <p class="callout-title">连锁奶茶店的标准作业流程（SOP）</p>
+      <p>奶茶总部给每家加盟店发一本操作手册：<strong>① 杯子消毒 → ② 加茶底 → ③ 加小料 → ④ 封口出货</strong>。这四步的<strong>顺序全网点一样，谁也不许乱</strong>——先封口再加料，那杯奶茶就废了。</p>
+      <p>但手册里有两处留着空格："茶底用哪种茶、小料加什么"由<strong>各门店自己填</strong>。所以同一本手册，做出芒果芋圆也做得出一杯纯茶。还有一条弹性条款："顾客说不要糖，就跳过加糖那步"——不重写整本手册，也能走出不同路径。</p>
+    </div>
+    <p>对应到模式里：<strong>总部手册是父类的模板方法（顺序焊死），"茶底 / 小料"两处空格是抽象方法（子类必须填），"不要糖就跳过"是钩子方法（默认走这条路，想改再改），各家门店就是子类</strong>。</p>
+  </section>
+
+  <section class="card">
+    <h2>😖 没有它会怎样</h2>
+    <p>本仓库的例子是冲泡饮料：茶和咖啡的流程几乎一样——烧水、冲泡、倒杯、加料，只有"泡什么"和"加什么料"不同。最直接的写法：每个类把流程从头抄一遍。</p>
+    <div class="callout pain">
+      <p class="callout-title">直来直去的写法（问题代码）</p>
+      <p>Tea 类里写一套 <code>prepare()</code>：烧水 → 浸泡茶叶 → 倒杯 → 加柠檬；Coffee 类里再抄一套：<code>烧水 → 冲泡咖啡粉 → 倒杯 → 加糖奶</code>。其中"烧水""倒杯"两步的代码<strong>一字不差地复制了两份</strong>。</p>
+    </div>
+    <p>复制一时爽，维护火葬场：</p>
+    <ul>
+      <li><strong>公共步骤被复制 N 份</strong>："烧水"要改成"烧水到 85 度"，得挨个类去改，漏改一个，行为就不一致。</li>
+      <li><strong>顺序没人把关</strong>：哪个类手一抖把"倒杯"写在"冲泡"前面，编译器不报错，喝的时候才知道出事了。</li>
+      <li><strong>想全局加一步就全城开挖</strong>：要求所有饮料出货前"贴标签"，又得往每个类里挨个插代码。</li>
+    </ul>
+    <p>根子上的问题：<strong>流程骨架没有单独的家</strong>。把骨架提到父类焊死、把会变的步骤挖成空格，重复和失控一起解决。</p>
+  </section>
+
+  <section class="card">
+    <h2>👥 角色构成（这个模式由几块拼成）</h2>
+    <table>
+      <thead>
+        <tr><th>角色</th><th>大白话职责</th><th>本仓库示例里是谁</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>抽象类 + 模板方法</strong></td>
+          <td>总部手册：把"先干什么后干什么"写死在一个方法里，还负责按顺序指挥每一步。这是全模式唯一的流程入口。</td>
+          <td><code>Beverage</code> 抽象类的 <code>prepare()</code></td>
+        </tr>
+        <tr>
+          <td><strong>抽象步骤</strong></td>
+          <td>手册里的空格："这步我不懂，子类你必须填。"不填，编译都过不去。</td>
+          <td><code>brew()</code>、<code>addCondiments()</code></td>
+        </tr>
+        <tr>
+          <td><strong>具体步骤与钩子</strong></td>
+          <td>公共步骤父类直接实现好；钩子给个默认答案（默认加料），子类想改流程走向时再覆盖。</td>
+          <td><code>boilWater()</code>、<code>pourInCup()</code>、<code>customerWantsCondiments()</code></td>
+        </tr>
+        <tr>
+          <td><strong>具体类</strong></td>
+          <td>填空的人：只把空格补上，流程顺序一点不碰。</td>
+          <td><code>Tea</code>、<code>Coffee</code>、<code>BlackCoffee</code></td>
+        </tr>
+      </tbody>
+    </table>
+    <p>解耦（把缠在一起的代码拆开，互不认识也能合作）的关键：<strong>骨架和实现分了家</strong>——顺序只活在父类一份代码里，变与不变各归各位。这背后是"好莱坞原则"：<strong>别调用我们，我们会调用你</strong>——子类只管交作业，指挥权始终在父类手里。</p>
+  </section>
+
+  <section class="card">
+    <h2>🗺️ 结构图（谁认识谁、谁调用谁）</h2>
+    <div class="diagram">
+      <div class="dbox key">Beverage<small>父类 · prepare() 焊死顺序：烧水→冲泡→倒杯→加料</small></div>
+      <div class="darrow">按骨架调用<br><small>brew() / addCondiments() 找子类要答案</small></div>
+      <div class="dstack">
+        <div class="dbox">Tea<small>泡茶叶 · 加柠檬</small></div>
+        <div class="dbox">Coffee<small>泡咖啡粉 · 加糖奶</small></div>
+        <div class="dbox">BlackCoffee<small>只覆盖钩子：不加料</small></div>
+      </div>
+    </div>
+    <p class="dcaption">调用方向永远从父类流向子类：骨架调用填空步骤，子类从不反过来指挥流程。外界只认 prepare() 这一个入口。</p>
+  </section>
+
+  <section class="card">
+    <h2>🔄 运转步骤（跑一遍完整流程）</h2>
+    <ol class="steps">
+      <li><strong>点单</strong>：<code>new Tea().prepare()</code>——外界只调模板方法这一个入口，不碰任何内部步骤。</li>
+      <li><strong>烧水</strong>：<code>prepare()</code> 第一步调 <code>boilWater()</code>，父类私有方法，所有饮料共用同一份代码。</li>
+      <li><strong>冲泡</strong>：调抽象方法 <code>brew()</code>——<code>Tea</code> 填的是"用沸水浸泡茶叶"，<code>Coffee</code> 填的是"用沸水冲泡咖啡粉"，谁实例化就调谁的。</li>
+      <li><strong>倒杯</strong>：调 <code>pourInCup()</code>，又是公共步骤，一份代码全体复用。</li>
+      <li><strong>问一嘴</strong>：调钩子 <code>customerWantsCondiments()</code>，默认返回 true；<code>BlackCoffee</code> 把它覆盖成 false。</li>
+      <li><strong>加料或跳过</strong>：true 就调 <code>addCondiments()</code> 加柠檬 / 糖奶；false 就打印"跳过"——同一套骨架，靠一个钩子走出两条路径。</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>🔍 代码走读</h2>
+    <p>下面是本仓库 TypeScript 实现的骨架（完整版见 <a href="../ts/template-method/main.ts">ts/template-method/main.ts</a>，有删减）：</p>
+    <div class="code-header">ts/template-method/main.ts（简化）</div>
+    <pre><code>// 抽象类：骨架写死在父类，外界只认 prepare() 这个入口
+abstract class Beverage {
+  prepare(): void {                         // 模板方法：流程唯一入口，子类不应重写
+    this.boilWater();                       // 公共步骤：父类直接实现
+    this.brew();                            // 抽象步骤：留给子类填空
+    this.pourInCup();
+    if (this.customerWantsCondiments()) {   // 钩子：问一嘴要不要加料
+      this.addCondiments();
+    } else {
+      console.log("（顾客不需要加料，跳过）");
+    }
+  }
+
+  private boilWater(): void { console.log("1. 把水烧开"); }
+  private pourInCup(): void { console.log("3. 把饮料倒入杯中"); }
+
+  protected abstract brew(): void;          // 子类必须实现
+  protected abstract addCondiments(): void;
+
+  protected customerWantsCondiments(): boolean {  // 钩子：默认加料
+    return true;
+  }
+}
+
+// 具体类：只填空，不碰顺序
+class Tea extends Beverage {
+  protected brew(): void { console.log("2. 用沸水浸泡茶叶"); }
+  protected addCondiments(): void { console.log("4. 加入柠檬"); }
+}
+
+// 只覆盖钩子，就能改变整条流程的走向
+class BlackCoffee extends Coffee {
+  protected override customerWantsCondiments(): boolean {
+    return false;  // 黑咖啡不加糖和奶
+  }
+}</code></pre>
+    <div class="callout tip">
+      <p class="callout-title">看懂这段代码，就看懂了整个模式</p>
+      <p>核心就一件事：<strong>父类的 <code>prepare()</code> 按固定顺序调用步骤，遇到抽象方法就去找子类的答案</strong>。子类填得再花哨，也动不了"先烧水后倒杯"这条底线——这就是控制权留在父类。</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚖️ 什么时候用，什么时候别用</h2>
+    <div class="two-col">
+      <div>
+        <h3>✅ 适合的场景</h3>
+        <ul class="checklist good">
+          <li>几个类的流程<strong>步骤一样、只有个别步骤实现不同</strong>：冲泡饮料、各种报告导出、各种 HTTP 接口处理</li>
+          <li>想消灭复制粘贴的重复流程代码，<strong>改一处全局生效</strong></li>
+          <li>要锁死执行顺序，只开放指定的扩展点给子类</li>
+        </ul>
+      </div>
+      <div>
+        <h3>❌ 不适合的场景</h3>
+        <ul class="checklist bad">
+          <li>流程步骤本身经常变——每改一次骨架，全体子类跟着抖三抖</li>
+          <li>各子类差异大到只有一两步相同——硬凑一个基类，反而更乱</li>
+          <li>更想运行时灵活换步骤——用组合（策略模式）比继承更松更好拆</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚠️ 容易踩的坑</h2>
+    <ul class="pitfalls">
+      <li><strong>骨架方法没挡住重写 → 秩序崩塌</strong>。TypeScript 没有 final 关键字，本仓库靠注释约定"子类不应重写 prepare()"；哪个子类一意孤行覆盖了它，整个流程保证就没了。</li>
+      <li><strong>钩子越加越多 → 模板方法变 if 森林</strong>。三五个钩子还看得懂，钩子多了没人说得清某次运行走的哪条路。钩子只留给"确实常见的分岔"。</li>
+      <li><strong>子类实现步骤时偷偷改流程外的状态 → 时序暗坑</strong>。比如在构造函数里就触发模板逻辑，父类还没准备好，炸得莫名其妙。</li>
+      <li><strong>继承层数摞太深 → 改一处抖一片</strong>。本仓库 BlackCoffee 到 Coffee 已经两层，再深一层，谁都说不清某个空格最终是谁填的。</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>🔗 和其他模式的关系</h2>
+    <ul>
+      <li>和<strong><a href="strategy.html">策略模式</a></strong>都在做"变与不变分离"：<strong>模板方法靠继承填空，控制力强；策略靠组合换对象，更灵活</strong>。想锁顺序用模板，想随时整套换用策略。</li>
+      <li><strong><a href="factory-method.html">工厂方法模式</a></strong>常作为模板方法里的一步："造出产品"这个空格留给子类填——GoF 里这两个模式本来就是好搭档。</li>
+      <li><strong><a href="builder.html">生成器模式</a></strong>也把"组装流程"和"具体步骤"分开，但生成器的流程掌握在指挥者手里可以换，模板方法的骨架焊死在父类身上。</li>
+    </ul>
+  </section>
+
+  <div class="remember">
+    <span class="remember-label">一 句 话 记 住 它</span>
+    <strong>爹定流程，儿子填空：顺序别动，内容随你。</strong>
+  </div>
+
+  <section class="card">
+    <h2>📦 本仓库 9 种语言实现</h2>
+    <p>同一个冲泡饮料的例子，用 9 种语言各写了一遍，挑一个你顺手的对照着看：</p>
+    <div class="lang-links">
+      <a class="pill" href="../cpp/template-method/README.md">C++</a>
+      <a class="pill" href="../go/template-method/README.md">Go</a>
+      <a class="pill" href="../java/template-method/README.md">Java</a>
+      <a class="pill" href="../js/template-method/README.md">JavaScript</a>
+      <a class="pill" href="../objc/template-method/README.md">Objective-C</a>
+      <a class="pill" href="../python/template-method/README.md">Python</a>
+      <a class="pill" href="../rust/template-method/README.md">Rust</a>
+      <a class="pill" href="../swift/template-method/README.md">Swift</a>
+      <a class="pill" href="../ts/template-method/README.md">TypeScript</a>
+    </div>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="strategy.html"><span class="nav-label">← 上一个</span><span class="nav-title">策略模式</span></a>
+    <a class="next" href="visitor.html"><span class="nav-label">下一个 →</span><span class="nav-title">访问者模式</span></a>
+  </nav>
+
+</main>
+
+<footer class="site-footer">
+  <p>GoF 设计模式 · 大白话图解 —— 配套 <a href="../README.md">GoF 多语言实现仓库</a>（9 种语言 × 23 个模式）</p>
+</footer>
+
+</body>
+</html>

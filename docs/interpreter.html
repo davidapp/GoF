@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>解释器模式 · Interpreter — GoF 设计模式大白话</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-category="behavioral">
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="index.html">📐 GoF 设计模式 · 大白话图解</a>
+    <nav class="crumbs">
+      <a href="index.html">首页</a><span>/</span>
+      <a href="index.html#behavioral">行为型</a><span>/</span>
+      <span class="current">解释器</span>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <section class="pattern-hero">
+    <span class="badge">行为型</span>
+    <h1>解释器模式 <small>Interpreter</small></h1>
+    <p class="one-liner">一句话：<strong>给一种简单的小语言定一套规则类，把句子拆成一棵树，顺着树把意思"解释"出来。</strong></p>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="command.html"><span class="nav-label">← 上一个</span><span class="nav-title">命令模式</span></a>
+    <a class="next" href="iterator.html"><span class="nav-label">下一个 →</span><span class="nav-title">迭代器模式</span></a>
+  </nav>
+
+  <section class="card">
+    <h2>🌰 生活里的例子</h2>
+    <div class="callout analogy">
+      <p class="callout-title">"爸爸的哥哥的儿子"是谁？</p>
+      <p>过年饭桌上长辈考你："你<strong>爸爸的哥哥的儿子</strong>，你该叫什么？"你脑子里其实是这么算的：先定位"爸爸"这个人 → 在家谱里找"他的哥哥" → 再找"哥哥的儿子" → 得出"堂哥"。</p>
+      <p>注意两个细节：这套"<strong>的某某</strong>"的推算规则是<strong>固定的</strong>，谁家都通用；换一本家谱（比如从妈妈那边算），同样的规则照样能算，只是查的册子换了。</p>
+    </div>
+    <p>这个比喻对应模式里的什么："<strong>的哥哥</strong>""<strong>的儿子</strong>"这些推算规则 = 一个个<strong>非终结符表达式类</strong>（枝干节点，负责把两边的算合起来）；"爸爸"这种具体的人 = <strong>终结符表达式</strong>（叶子节点，直接给答案）；整串称呼 = 句子；家谱名册 = <strong>Context 上下文</strong>（存着"每个名字对应谁"的对照数据）；一层层往里推 = <code>interpret()</code> 递归求值。</p>
+  </section>
+
+  <section class="card">
+    <h2>😖 没有它会怎样</h2>
+    <p>本仓库的场景是<strong>算术表达式</strong>：程序要算 "5 + 3 - 2"、"x + 20 - y" 这种式子。最直接的写法是每来一个式子就手写一个函数：</p>
+    <div class="callout pain">
+      <p class="callout-title">直来直去的写法（问题代码）</p>
+      <p>一个式子配一个函数，硬编码：</p>
+      <p><code>function calc1() { return 5 + 3 - 2; }</code> —— 专门算这一句</p>
+      <p><code>function calc2(x, y) { return x + 20 - y; }</code> —— 换个式子再写一个</p>
+    </div>
+    <p>这样写眼下能跑，但麻烦在后头：</p>
+    <ul>
+      <li><strong>表达式是运行时才知道的</strong>（用户输进来的、配置文件里读来的），你根本没法提前把函数写好。</li>
+      <li><strong>式子变一点就得新写一个函数</strong>；哪天要支持乘除，老函数全部重写。</li>
+      <li><strong>"按规则解读一句话"的逻辑散落在各处</strong>，没有统一的地方管规则、查变量。</li>
+    </ul>
+    <p>根子上的问题是<strong>把"一句一句的式子"当成了代码</strong>，而它们其实是<strong>数据</strong>——是数据就该被解析、被解释，而不是被手写。</p>
+  </section>
+
+  <section class="card">
+    <h2>👥 角色构成（这个模式由几块拼成）</h2>
+    <table>
+      <thead>
+        <tr><th>角色</th><th>大白话职责</th><th>本仓库示例里是谁</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>抽象表达式</strong></td>
+          <td>定规矩："每个语法节点都得会自己算出自己的值"。</td>
+          <td><code>Expression</code> 接口</td>
+        </tr>
+        <tr>
+          <td><strong>终结符表达式</strong>（叶子）</td>
+          <td>推到头了的节点：数字直接报数，变量翻家谱（查上下文）。</td>
+          <td><code>NumberExpression</code>、<code>VariableExpression</code></td>
+        </tr>
+        <tr>
+          <td><strong>非终结符表达式</strong>（枝干）</td>
+          <td>复合节点：手里攥着左右两棵子树，先递归算两边，再把结果合起来（相加/相减）。</td>
+          <td><code>AddExpression</code>、<code>SubtractExpression</code></td>
+        </tr>
+        <tr>
+          <td><strong>上下文 Context</strong></td>
+          <td>一本"家谱名册"：变量名 → 数值的对照表，可以随时改。</td>
+          <td><code>Context</code> 类</td>
+        </tr>
+        <tr>
+          <td><strong>解析器 + 客户端</strong></td>
+          <td>把 "x + 20 - y" 这样的字符串一句句拆开、搭成树，再发动求值。</td>
+          <td><code>parseExpression()</code>、<code>main()</code></td>
+        </tr>
+      </tbody>
+    </table>
+    <p>解耦关键在哪：<strong>每种语法规则一个类，规则长在类里而不是长在 if/else 里</strong>。想支持乘法？新增一个 <code>MultiplyExpression</code> 类，老的表达式类一个都不用动——这就是解耦（把缠在一起的代码拆开，互不认识也能合作）。而且树搭好以后可以反复用：换本"家谱"（改 Context 里的变量）就能重算，不用重新解析。</p>
+  </section>
+
+  <section class="card">
+    <h2>🗺️ 结构图（谁认识谁、谁调用谁）</h2>
+    <div class="diagram">
+      <div class="dbox">"5 + 3 - 2"<small>句子（字符串）</small></div>
+      <div class="darrow">→<br><small>parseExpression()<br>分词、搭树</small></div>
+      <div class="dstack">
+        <div class="dbox key">SubtractExpression<small>根节点「-」</small></div>
+        <div class="darrow">interpret 左 ↙　↘ interpret 右</div>
+        <div class="diagram">
+          <div class="dstack">
+            <div class="dbox">AddExpression<small>「+」节点</small></div>
+            <div class="darrow">↙　↘</div>
+            <div class="diagram">
+              <div class="dbox">NumberExpression<small>叶子：5</small></div>
+              <div class="dbox">NumberExpression<small>叶子：3</small></div>
+            </div>
+          </div>
+          <div class="dbox">NumberExpression<small>叶子：2</small></div>
+        </div>
+      </div>
+      <div class="darrow">→<br><small>interpret(context)<br>从根递归求值</small></div>
+      <div class="dbox">结果：6<small>变量从 Context 里查</small></div>
+    </div>
+    <p class="dcaption">这就是一棵语法树：叶子（数字/变量）自己报数，枝干（加减）把左右两边递归算出的结果合并。对 "x + 20 - y" 来说，把叶子换成变量，值从 Context 查。</p>
+  </section>
+
+  <section class="card">
+    <h2>🔄 运转步骤（跑一遍完整流程）</h2>
+    <ol class="steps">
+      <li><strong>备好上下文</strong>：造一个 <code>Context</code>，登记 <code>x=10</code>、<code>y=4</code>——相当于备好家谱名册。</li>
+      <li><strong>分词</strong>：<code>parseExpression("x + 20 - y")</code> 按空格把句子切成一个一个词。</li>
+      <li><strong>搭树</strong>：先拿下第一个词当左叶子，往后每碰到一个 <code>+</code>/<code>-</code>，就把"已有结果"和"下一个词"包成一个新的加/减节点——从左到右，越包越厚。</li>
+      <li><strong>求值</strong>：对树根调 <code>interpret(context)</code>——枝干先递归问左右子树，叶子直接报数（变量就查 Context），一层层把 26 算出来。</li>
+      <li><strong>复用重算</strong>：把 Context 改成 <code>x=100</code>，对同一棵树再 <code>interpret()</code> 一次，直接得 116——树不用重建。</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>🔍 代码走读</h2>
+    <p>下面是本仓库 TypeScript 实现的骨架（完整版见 <a href="../ts/interpreter/main.ts">ts/interpreter/main.ts</a>，有删减）：</p>
+    <div class="code-header">ts/interpreter/main.ts（简化）</div>
+    <pre><code>// 上下文：变量名 → 数值 的对照表（家谱名册）
+class Context {
+  private readonly variables = new Map&lt;string, number&gt;();
+  setValue(name: string, value: number): void { this.variables.set(name, value); }
+  getValue(name: string): number {
+    const value = this.variables.get(name);
+    if (value === undefined) throw new Error(`未定义的变量: ${name}`);
+    return value;
+  }
+}
+
+// 抽象表达式：每个语法节点都会"自我求值"
+interface Expression {
+  interpret(context: Context): number;
+}
+
+// 终结符（叶子）：数字直接返回；变量去查上下文
+class NumberExpression implements Expression {
+  constructor(private readonly value: number) {}
+  interpret(_context: Context): number { return this.value; }
+}
+
+// 非终结符（枝干）：先递归算左右子树，再把结果合并
+class AddExpression implements Expression {
+  constructor(
+    private readonly left: Expression,
+    private readonly right: Expression,
+  ) {}
+  interpret(context: Context): number {
+    return this.left.interpret(context) + this.right.interpret(context);
+  }
+}
+
+// 解析器把 "x + 20 - y" 搭成上面这类节点组成的树
+const expr = parseExpression("x + 20 - y");
+expr.interpret(context);  // → 26；改 x=100 再 interpret 一次 → 116</code></pre>
+    <div class="callout tip">
+      <p class="callout-title">看懂这段代码，就看懂了整个模式</p>
+      <p>核心就一行：<strong><code>AddExpression</code> 里的 <code>left.interpret(context) + right.interpret(context)</code></strong>——枝干把问题拆给左右子树，叶子给出答案，递归到底，整棵树的值就出来了。加减如此，乘除、与或，都是一个道理。</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚖️ 什么时候用，什么时候别用</h2>
+    <div class="two-col">
+      <div>
+        <h3>✅ 适合的场景</h3>
+        <ul class="checklist good">
+          <li>语法<strong>简单、规则固定</strong>的小语言：算式、权限表达式（"admin AND NOT banned"）、筛选条件</li>
+          <li>每条文法规则能对应一个类，规则数量不多，类不会失控</li>
+          <li>同一棵树要<strong>换着数据反复求值</strong>：改改 Context 里的变量就能重算，树不用重建</li>
+        </ul>
+      </div>
+      <div>
+        <h3>❌ 不适合的场景</h3>
+        <ul class="checklist bad">
+          <li>语法复杂或性能敏感——用现成的解析器、规则引擎，别手搓</li>
+          <li>文法规则特别多——每种规则一个类，几十个类堆在那，改一条文法牵连一片</li>
+          <li>只是算个写死的公式——直接写函数，三行搞定的事别上二十个类</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚠️ 容易踩的坑</h2>
+    <ul class="pitfalls">
+      <li><strong>类爆炸</strong>。"加"一个类、"减"一个类、"乘"再一个类……类的数量跟着文法规则走，读代码要在十几个文件之间跳。</li>
+      <li><strong>递归太深会爆栈</strong>。表达式嵌套一百层，<code>interpret</code> 就要递归一百层。解析用户输入时尤其要设防（比如限制表达式长度）。</li>
+      <li><strong>变量没定义，运行时才炸</strong>。Context 里忘了 setValue，一路求值到叶子才抛"未定义的变量"。最好解析完先统一检查一遍。</li>
+      <li><strong>优先级没处理对</strong>。本例只有加减、同优先级左结合，所以简单；一旦混入乘除，解析器必须先处理优先级，否则 2 + 3 * 4 会被算成 10。</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>🔗 和其他模式的关系</h2>
+    <ul>
+      <li>语法树本身就是<strong><a href="composite.html">组合模式</a></strong>的应用：叶子是数字/变量，枝干是运算节点，整棵树统一用 <code>Expression</code> 接口递归。</li>
+      <li>想给同一棵树加新操作（打印、检查变量、求值……）而不改动节点类，配上<strong><a href="visitor.html">访问者模式</a></strong>。</li>
+      <li>重复出现的叶子（比如同一个数字到处用）可以做成共享对象，用<strong><a href="flyweight.html">享元模式</a></strong>省内存。</li>
+    </ul>
+  </section>
+
+  <div class="remember">
+    <span class="remember-label">一 句 话 记 住 它</span>
+    <strong>把句子拆成一棵树，每个节点自己会算；树搭一次，换本"词典"（上下文）就能反复算。</strong>
+  </div>
+
+  <section class="card">
+    <h2>📦 本仓库 9 种语言实现</h2>
+    <p>同一个算术表达式求值的例子，用 9 种语言各写了一遍，挑一个你顺手的对照着看：</p>
+    <div class="lang-links">
+      <a class="pill" href="../cpp/interpreter/README.md">C++</a>
+      <a class="pill" href="../go/interpreter/README.md">Go</a>
+      <a class="pill" href="../java/interpreter/README.md">Java</a>
+      <a class="pill" href="../js/interpreter/README.md">JavaScript</a>
+      <a class="pill" href="../objc/interpreter/README.md">Objective-C</a>
+      <a class="pill" href="../python/interpreter/README.md">Python</a>
+      <a class="pill" href="../rust/interpreter/README.md">Rust</a>
+      <a class="pill" href="../swift/interpreter/README.md">Swift</a>
+      <a class="pill" href="../ts/interpreter/README.md">TypeScript</a>
+    </div>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="command.html"><span class="nav-label">← 上一个</span><span class="nav-title">命令模式</span></a>
+    <a class="next" href="iterator.html"><span class="nav-label">下一个 →</span><span class="nav-title">迭代器模式</span></a>
+  </nav>
+
+</main>
+
+<footer class="site-footer">
+  <p>GoF 设计模式 · 大白话图解 —— 配套 <a href="../README.md">GoF 多语言实现仓库</a>（9 种语言 × 23 个模式）</p>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>命令模式 · Command — GoF 设计模式大白话</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-category="behavioral">
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="index.html">📐 GoF 设计模式 · 大白话图解</a>
+    <nav class="crumbs">
+      <a href="index.html">首页</a><span>/</span>
+      <a href="index.html#behavioral">行为型</a><span>/</span>
+      <span class="current">命令</span>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <section class="pattern-hero">
+    <span class="badge">行为型</span>
+    <h1>命令模式 <small>Command</small></h1>
+    <p class="one-liner">一句话：<strong>把"要干的一件事"打包成一个对象——发令的按钮只管按，不认识干活的人；干完还能反悔，把这事原样撤回来。</strong></p>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="chain-of-responsibility.html"><span class="nav-label">← 上一个</span><span class="nav-title">责任链模式</span></a>
+    <a class="next" href="interpreter.html"><span class="nav-label">下一个 →</span><span class="nav-title">解释器模式</span></a>
+  </nav>
+
+  <section class="card">
+    <h2>🌰 生活里的例子</h2>
+    <div class="callout analogy">
+      <p class="callout-title">餐厅的点菜单</p>
+      <p>你坐下点了份"宫保鸡丁"。服务员<strong>不认识厨师</strong>，也<strong>不管这菜怎么炒</strong>——她只把菜名写在点菜单上，撕下来夹到后厨窗口。厨师看到单子才开火。菜没上想退？把单子撤回来；想先上凉菜再上热菜？把单子排个队就行。</p>
+      <p>注意：服务员（发令的人）和厨师（干活的人）从头到尾<strong>没说过一句话</strong>，全靠一张单子传递。</p>
+    </div>
+    <p>这个比喻对应模式里的什么：点菜单 = <strong>命令对象</strong>（Command，写着"做什么"）；服务员 = <strong>调用者</strong>（RemoteControl，只管收单、递单、记账）；厨师 = <strong>接收者</strong>（Light，真正干活）；你 = 客户端（决定下什么单）。"退单"就是 <code>undo()</code>，"排队的单子"就是历史栈。</p>
+  </section>
+
+  <section class="card">
+    <h2>😖 没有它会怎样</h2>
+    <p>本仓库的场景是<strong>遥控器控制灯</strong>：客厅灯、卧室灯，能开能关，还要能撤销。最直接的写法是按钮的点击处理里直接伸手：</p>
+    <div class="callout pain">
+      <p class="callout-title">直来直去的写法（问题代码）</p>
+      <p>按钮被按下时，直接调用具体电器：</p>
+      <p><code>livingRoomLight.turnOn()</code> —— 按钮自己动手开灯</p>
+    </div>
+    <p>这样写眼下能跑，但麻烦在后头：</p>
+    <ul>
+      <li><strong>按钮被迫认识灯的每个方法</strong>。哪天这个按钮要改成控制音响？按钮代码整个重写。</li>
+      <li><strong>想撤销？没门</strong>。按钮按完就忘了，压根没有"刚才干了什么"的记录，Ctrl+Z 无从谈起。</li>
+      <li><strong>想排队、记日志、定时执行？没有"操作"这个实体可以存起来</strong>，一切都是空谈。</li>
+    </ul>
+    <p>根子上的问题是<strong>"发出指令"和"执行指令"被焊死在一起了</strong>。拆开的办法：把指令本身变成一个对象，谁想发就发，发出去还能存。</p>
+  </section>
+
+  <section class="card">
+    <h2>👥 角色构成（这个模式由几块拼成）</h2>
+    <table>
+      <thead>
+        <tr><th>角色</th><th>大白话职责</th><th>本仓库示例里是谁</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>命令 Command</strong></td>
+          <td>定规矩："每个命令都得会两招——执行 execute、反悔 undo"。</td>
+          <td><code>Command</code> 接口</td>
+        </tr>
+        <tr>
+          <td><strong>具体命令</strong></td>
+          <td>一张张具体的"单子"。手里攥着接收者，把活儿转包给它。</td>
+          <td><code>LightOnCommand</code>、<code>LightOffCommand</code>（外加空占位的 <code>NoCommand</code>）</td>
+        </tr>
+        <tr>
+          <td><strong>接收者 Receiver</strong></td>
+          <td>真正干活的人：灯知道自己怎么开、怎么关。</td>
+          <td><code>Light</code>（客厅灯、卧室灯）</td>
+        </tr>
+        <tr>
+          <td><strong>调用者 Invoker</strong></td>
+          <td>发单子的人。只认识"命令"这个概念，还拿个小本本（历史栈）记下每张发出去的单子。</td>
+          <td><code>RemoteControl</code>（遥控器）</td>
+        </tr>
+        <tr>
+          <td><strong>客户端</strong></td>
+          <td>决定哪盏灯配哪条命令，绑到遥控器上。</td>
+          <td><code>main()</code> 函数</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>解耦关键在哪：<strong>遥控器只认识 <code>Command</code> 接口，完全不认识灯；命令认识灯，但不认识遥控器</strong>。两头各管各的，中间靠"单子"传话——这就是解耦（把缠在一起的代码拆开，互不认识也能合作）。换一种电器？换一张单子就行，遥控器零改动。</p>
+  </section>
+
+  <section class="card">
+    <h2>🗺️ 结构图（谁认识谁、谁调用谁）</h2>
+    <div class="diagram">
+      <div class="dbox key">RemoteControl<small>调用者 · 遥控器<br>还拿着历史栈</small></div>
+      <div class="darrow">→<br><small>pressButton()<br>调 command.execute()</small></div>
+      <div class="dstack">
+        <div class="dbox">LightOnCommand<small>开灯命令</small></div>
+        <div class="dbox">LightOffCommand<small>关灯命令</small></div>
+      </div>
+      <div class="darrow">→<br><small>execute() 转包<br>turnOn() / turnOff()</small></div>
+      <div class="dbox">Light<small>接收者 · 真正干活的灯</small></div>
+    </div>
+    <p class="dcaption">箭头方向 = 调用方向。想撤销？遥控器从历史栈弹出上一张"单子"，调它的 undo()——单子自己知道怎么把事情倒回去。</p>
+  </section>
+
+  <section class="card">
+    <h2>🔄 运转步骤（跑一遍完整流程）</h2>
+    <ol class="steps">
+      <li><strong>备货</strong>：造好接收者——客厅灯 <code>livingRoomLight</code>、卧室灯 <code>bedroomLight</code>，再造一个遥控器。</li>
+      <li><strong>绑单</strong>：<code>remote.setCommand(new LightOnCommand(livingRoomLight))</code>，把"开客厅灯"这张单子绑到按钮上。</li>
+      <li><strong>按下</strong>：<code>pressButton()</code> 调 <code>execute()</code>，命令转手调 <code>light.turnOn()</code>——灯亮了；同时这张单子被压进 <code>history</code> 栈。</li>
+      <li><strong>继续操作</strong>：开卧室灯、关客厅灯……每按一次，栈里就多记一笔。</li>
+      <li><strong>撤销</strong>：<code>pressUndo()</code> 从栈里弹出最近那张单子，调它的 <code>undo()</code>——"关客厅灯"被倒回成"开客厅灯"。</li>
+      <li><strong>再撤</strong>：再按一次撤销，弹出更早那张"开卧室灯"，倒回成"关卧室灯"。栈空了就提示"没有可撤销的操作"。</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>🔍 代码走读</h2>
+    <p>下面是本仓库 TypeScript 实现的骨架（完整版见 <a href="../ts/command/main.ts">ts/command/main.ts</a>，有删减）：</p>
+    <div class="code-header">ts/command/main.ts（简化）</div>
+    <pre><code>// 命令接口：一个动作的抽象——会执行，也得会反悔
+interface Command {
+  execute(): void;
+  undo(): void;
+  describe(): string;
+}
+
+// 具体命令：手里攥着接收者，把活儿转包给它
+class LightOnCommand implements Command {
+  constructor(private readonly light: Light) {}
+
+  execute(): void { this.light.turnOn(); }    // 开灯
+  undo(): void     { this.light.turnOff(); }  // 反悔 = 关灯
+  describe(): string { return "开灯命令"; }
+}
+
+// 调用者：遥控器，只认识 Command，完全不认识灯
+class RemoteControl {
+  private slot: Command = new NoCommand();   // 默认空命令，省得判空
+  private readonly history: Command[] = [];  // 操作历史栈
+
+  setCommand(command: Command): void { this.slot = command; }
+
+  pressButton(): void {
+    this.slot.execute();          // 执行
+    this.history.push(this.slot); // 记账，为撤销做准备
+  }
+
+  pressUndo(): void {
+    const last = this.history.pop();
+    if (last !== undefined) {
+      console.log(`撤销上一步：${last.describe()}`);
+      last.undo();                // 让单子自己倒回去
+    }
+  }
+}</code></pre>
+    <div class="callout tip">
+      <p class="callout-title">看懂这段代码，就看懂了整个模式</p>
+      <p>核心就两个动作：<strong>execute 时转包（调接收者）+ undo 时反着转包</strong>。遥控器那两行 push / pop 就是撤销功能的全部秘密——把"做过的事"存成对象，反悔时拿出来倒放一遍。</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚖️ 什么时候用，什么时候别用</h2>
+    <div class="two-col">
+      <div>
+        <h3>✅ 适合的场景</h3>
+        <ul class="checklist good">
+          <li>需要<strong>撤销 / 重做</strong>：编辑器的 Ctrl+Z、游戏的读档回退，靠命令对象攒历史栈</li>
+          <li>需要把操作<strong>排队、记日志、定时跑</strong>：任务队列、事务日志，装的都是命令对象</li>
+          <li>发令的组件要和干活的组件彻底解耦：遥控器按钮不绑定具体电器，配置一下就能换</li>
+        </ul>
+      </div>
+      <div>
+        <h3>❌ 不适合的场景</h3>
+        <ul class="checklist bad">
+          <li>操作就一两个、永远不需要撤销——直接调方法，包一层纯属多余</li>
+          <li>操作没法"反着做"（邮件发出去了没法取消发送）——undo 就是空中楼阁</li>
+          <li>一堆琐碎小操作都要建命令类——类的数量爆炸，维护成本超过收益</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚠️ 容易踩的坑</h2>
+    <ul class="pitfalls">
+      <li><strong>undo 和 execute 不对称</strong>。开灯命令的 undo 里又写成了开灯——每按一次撤销就错一次。写 undo 前先自问：怎么把世界恢复到执行之前？</li>
+      <li><strong>只有撤销栈、没有重做栈</strong>。用户撤销之后想"撤回这次撤销"？没辙。完整体验通常要 undo 栈和 redo 栈成对出现。</li>
+      <li><strong>命令对象里存错状态</strong>。该存的（比如执行前的亮度）没存，撤销就失败；存了一堆用不上的，内存白白被占。存什么、何时存，一开始就要想清楚。</li>
+      <li><strong>宏命令撤销顺序弄反</strong>。批量执行 3 条命令，撤销时得倒着来（后开的灯先关）；正着撤一遍，只会越撤越乱。</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>🔗 和其他模式的关系</h2>
+    <ul>
+      <li>和<strong><a href="strategy.html">策略模式</a></strong>长得几乎一模一样（都是"接口 + 一堆实现"），但意图不同：策略是"挑一种做法换着用"，命令是"把动作记下来，好排队、好撤销"。</li>
+      <li>和<strong><a href="memento.html">备忘录模式</a></strong>都能做撤销：备忘录是"拍快照存状态，撤销时恢复回去"，命令是"记动作，撤销时反着再做一遍"。状态又大又乱用备忘录，动作干净利落用命令。</li>
+      <li>可以和<strong><a href="chain-of-responsibility.html">责任链模式</a></strong>组合：命令对象作为请求沿链传递，由链上的处理者决定接不接、何时执行。</li>
+    </ul>
+  </section>
+
+  <div class="remember">
+    <span class="remember-label">一 句 话 记 住 它</span>
+    <strong>把"要做的事"写成一张单子：发令的只管递单子，干活的照单办事，后悔了就把单子倒着撤一遍。</strong>
+  </div>
+
+  <section class="card">
+    <h2>📦 本仓库 9 种语言实现</h2>
+    <p>同一个遥控器开关灯的例子，用 9 种语言各写了一遍，挑一个你顺手的对照着看：</p>
+    <div class="lang-links">
+      <a class="pill" href="../cpp/command/README.md">C++</a>
+      <a class="pill" href="../go/command/README.md">Go</a>
+      <a class="pill" href="../java/command/README.md">Java</a>
+      <a class="pill" href="../js/command/README.md">JavaScript</a>
+      <a class="pill" href="../objc/command/README.md">Objective-C</a>
+      <a class="pill" href="../python/command/README.md">Python</a>
+      <a class="pill" href="../rust/command/README.md">Rust</a>
+      <a class="pill" href="../swift/command/README.md">Swift</a>
+      <a class="pill" href="../ts/command/README.md">TypeScript</a>
+    </div>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="chain-of-responsibility.html"><span class="nav-label">← 上一个</span><span class="nav-title">责任链模式</span></a>
+    <a class="next" href="interpreter.html"><span class="nav-label">下一个 →</span><span class="nav-title">解释器模式</span></a>
+  </nav>
+
+</main>
+
+<footer class="site-footer">
+  <p>GoF 设计模式 · 大白话图解 —— 配套 <a href="../README.md">GoF 多语言实现仓库</a>（9 种语言 × 23 个模式）</p>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>备忘录模式 · Memento — GoF 设计模式大白话</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body data-category="behavioral">
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="index.html">📐 GoF 设计模式 · 大白话图解</a>
+    <nav class="crumbs">
+      <a href="index.html">首页</a><span>/</span>
+      <a href="index.html#behavioral">行为型</a><span>/</span>
+      <span class="current">备忘录</span>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+
+  <section class="pattern-hero">
+    <span class="badge">行为型</span>
+    <h1>备忘录模式 <small>Memento</small></h1>
+    <p class="one-liner">一句话：<strong>把对象此刻的模样拍成一张"快照"存到外面，干砸了随时掏出来一键复原。</strong></p>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="mediator.html"><span class="nav-label">← 上一个</span><span class="nav-title">中介者模式</span></a>
+    <a class="next" href="observer.html"><span class="nav-label">下一个 →</span><span class="nav-title">观察者模式</span></a>
+  </nav>
+
+  <section class="card">
+    <h2>🌰 生活里的例子</h2>
+    <div class="callout analogy">
+      <p class="callout-title">游戏存档</p>
+      <p>打 BOSS 之前，你先<strong>存个档</strong>：游戏把此刻的血量、装备、所在位置统统写进一个存档文件。结果真打输了，<strong>读档</strong>，一切回到存档那一刻，装备一件没丢。</p>
+      <p>注意一个细节：存档文件对你来说是个<strong>黑盒</strong>。你不需要看懂里面存的是什么格式，更不该手改它——手改存档，十有八九把存档改坏。你（玩家）只干两件事：把存档放进存档槽，需要时取出来还给游戏。</p>
+    </div>
+    <p>对应到模式里：<strong>游戏是"发起人"（它会存档也会读档），存档文件就是"备忘录"（黑盒快照），你这位管存档槽的玩家是"管理者"（只保管，从不打开看）</strong>。会造快照、会读快照的只有游戏自己。</p>
+  </section>
+
+  <section class="card">
+    <h2>😖 没有它会怎样</h2>
+    <p>本仓库的例子是一个文本编辑器 <code>TextEditor</code>，要做"撤销（undo）"功能。最直接的写法：把内容公开，让外面的代码自己抄一份存着。</p>
+    <div class="callout pain">
+      <p class="callout-title">直来直去的写法（问题代码）</p>
+      <p>编辑器被迫敞开大门：<code>content</code> 做成公开字段，再配上 <code>getContent()</code> / <code>setContent()</code> 随便进出。外面的"历史记录"自己动手抄内容：<code>history.push(editor.getContent())</code>，撤销时再 <code>editor.setContent(history.pop())</code>。</p>
+    </div>
+    <p>眼下能跑，后患无穷：</p>
+    <ul>
+      <li><strong>编辑器被扒光</strong>：内部状态全公开，任何代码都能顺手改一把，封装（把内部数据藏起来只留出入口）算是彻底破了。</li>
+      <li><strong>加一个字段，全城戒备</strong>：编辑器下个月要加"光标位置、字体大小"，外面所有抄状态的代码都得跟着改——因为外面"懂"它的内部结构，缠在一起了。</li>
+      <li><strong>存法一换就连锁反应</strong>：历史记录想换个存法（比如只存增量），编辑器也得跟着动，谁都别想单独改。</li>
+    </ul>
+    <p>根子上的问题：<strong>不该让外人懂对象的内部状态</strong>。快照该由对象自己打包、自己解读，外人只当搬运工。</p>
+  </section>
+
+  <section class="card">
+    <h2>👥 角色构成（这个模式由几块拼成）</h2>
+    <table>
+      <thead>
+        <tr><th>角色</th><th>大白话职责</th><th>本仓库示例里是谁</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>发起人 Originator</strong></td>
+          <td>状态的主人：会把自家状态打包成快照，也会从快照读回来。全世界只有它懂快照的格式。</td>
+          <td><code>TextEditor</code>（<code>save()</code> / <code>restore()</code>）</td>
+        </tr>
+        <tr>
+          <td><strong>备忘录 Memento</strong></td>
+          <td>快照本身：装着某一刻的完整状态，对外只读，像个黑盒子。</td>
+          <td><code>EditorMemento</code></td>
+        </tr>
+        <tr>
+          <td><strong>管理者 Caretaker</strong></td>
+          <td>仓库保管员：只负责收快照、发快照（压栈 / 出栈），从不打开偷看里面装了什么。</td>
+          <td><code>History</code></td>
+        </tr>
+      </tbody>
+    </table>
+    <p>解耦（把缠在一起的代码拆开，互不认识也能合作）的关键：<strong><code>History</code> 和编辑器之间只有一个"存 / 取"的约定</strong>。真正懂状态格式的只有 <code>TextEditor</code> 一个——它加十个字段，<code>History</code> 一行都不用改。</p>
+  </section>
+
+  <section class="card">
+    <h2>🗺️ 结构图（谁认识谁、谁调用谁）</h2>
+    <div class="diagram">
+      <div class="dbox">TextEditor<small>发起人 · 唯一懂状态的人</small></div>
+      <div class="darrow">造快照 / 用快照<br><small>save() · restore()</small></div>
+      <div class="dbox key">EditorMemento<small>快照 · 黑盒 · 只读</small></div>
+      <div class="darrow">搬运<br><small>push() · pop()</small></div>
+      <div class="dbox">History<small>管理者 · 只存不看</small></div>
+    </div>
+    <p class="dcaption">箭头方向 = 调用方向：TextEditor 创建并读取快照；History 只负责搬运快照，从头到尾没打开看过。</p>
+  </section>
+
+  <section class="card">
+    <h2>🔄 运转步骤（跑一遍完整流程）</h2>
+    <ol class="steps">
+      <li><strong>输入</strong>：<code>editor.type("第一段内容。")</code>，内容写进编辑器。</li>
+      <li><strong>打快照</strong>：调用 <code>editor.save()</code>，编辑器把当前的 <code>content</code> 装进一个新建的 <code>EditorMemento</code>。</li>
+      <li><strong>入库</strong>：<code>history.push(快照)</code>，保管员把它压进栈底，看都没看一眼。</li>
+      <li><strong>继续写</strong>：又输入"第二段内容。"再存一张快照 2；接着写"第三段内容（写错了，待会撤销）。"——这步故意不存。</li>
+      <li><strong>撤销</strong>：<code>history.pop()</code> 摸出最近一张快照（快照 2），交回 <code>editor.restore()</code>。</li>
+      <li><strong>复原</strong>：编辑器从快照里读回内容，文本回到"第一段 + 第二段"。再 pop 一次还能撤到快照 1——<strong>多级撤销</strong>就是这么摞出来的。</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>🔍 代码走读</h2>
+    <p>下面是本仓库 TypeScript 实现的骨架（完整版见 <a href="../ts/memento/main.ts">ts/memento/main.ts</a>，有删减）：</p>
+    <div class="code-header">ts/memento/main.ts（简化）</div>
+    <pre><code>// 备忘录：一个只读的"快照"，只有编辑器自己会用它
+class EditorMemento {
+  constructor(private readonly content: string) {}
+  getContent(): string {
+    return this.content;
+  }
+}
+
+// 发起人：唯一懂"状态怎么存、怎么取"的人
+class TextEditor {
+  private content = "";
+
+  type(text: string): void { this.content += text; }
+
+  save(): EditorMemento {                   // ① 把当前状态拍成快照
+    return new EditorMemento(this.content);
+  }
+
+  restore(memento: EditorMemento): void {   // ③ 撤销时从快照读回来
+    this.content = memento.getContent();
+  }
+}
+
+// 管理者：只管存和取，从不打开快照看内容
+class History {
+  private readonly mementos: EditorMemento[] = [];
+
+  push(memento: EditorMemento): void { this.mementos.push(memento); }
+  pop(): EditorMemento | undefined { return this.mementos.pop(); }  // ② 撤销时取最近一张
+}</code></pre>
+    <div class="callout tip">
+      <p class="callout-title">看懂这段代码，就看懂了整个模式</p>
+      <p>整个模式的核心就一句：<strong>"存"和"取"都经过发起人的手，管理者只当快递员</strong>。快照对管理者是不可见的黑盒，所以封装一点没破；快照摞在栈里，所以能一路撤到底。</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚖️ 什么时候用，什么时候别用</h2>
+    <div class="two-col">
+      <div>
+        <h3>✅ 适合的场景</h3>
+        <ul class="checklist good">
+          <li>需要<strong>撤销 / 回滚</strong>：编辑器 undo、游戏读档、数据库事务回滚</li>
+          <li>想保存和恢复对象内部状态，又<strong>不想把内部字段公开</strong></li>
+          <li>要多级撤销——不只撤一步，能一路撤回历史任意一刻</li>
+        </ul>
+      </div>
+      <div>
+        <h3>❌ 不适合的场景</h3>
+        <ul class="checklist bad">
+          <li>状态特别大或快照特别频繁——每张快照都是完整拷贝，内存吃不消</li>
+          <li>压根不需要回头的操作（一次性计算、流水式处理）——存快照纯属浪费</li>
+          <li>状态里攥着文件句柄、网络连接这类外部资源——快照存不下也恢复不了</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>⚠️ 容易踩的坑</h2>
+    <ul class="pitfalls">
+      <li><strong>快照又大又密 → 内存爆炸</strong>。每按一次键就存一张全量快照，历史列表越长占得越多。大对象要改增量快照，或限制历史长度。</li>
+      <li><strong>管理者偷看偷改快照 → 封装破防</strong>。快照只能原样转交，一旦有人绕过发起人直接改快照内容，"恢复"就恢复出脏数据了。</li>
+      <li><strong>备忘录做成可变的 → 神不知鬼不觉被改</strong>。快照应当只读（本仓库的 <code>content</code> 就是 <code>readonly</code>），拍照那一刻就定格，不许再动。</li>
+      <li><strong>只恢复了内存，忘了恢复外部世界</strong>。编辑器内容回去了，界面没刷新、关联文件没同步，用户看到的还是错的。</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>🔗 和其他模式的关系</h2>
+    <ul>
+      <li>和<strong><a href="command.html">命令模式</a></strong>是撤销功能的黄金搭档：命令记录"你<strong>做了</strong>什么"（可以反向执行来撤销），备忘录记录"当时<strong>长什么样</strong>"（直接恢复快照）。</li>
+      <li><strong><a href="prototype.html">原型模式</a></strong>也能复制对象，但那是完整克隆一个新对象拿去用；备忘录是黑盒快照，专门为了存起来等日后恢复。</li>
+      <li>想实现"重做 / 时间线"要在历史快照列表里来回走，可以配合<strong><a href="iterator.html">迭代器模式</a></strong>遍历这些快照。</li>
+    </ul>
+  </section>
+
+  <div class="remember">
+    <span class="remember-label">一 句 话 记 住 它</span>
+    <strong>先拍照再动手，干砸了就掏出照片，回到拍照那一刻。</strong>
+  </div>
+
+  <section class="card">
+    <h2>📦 本仓库 9 种语言实现</h2>
+    <p>同一个文本编辑器撤销的例子，用 9 种语言各写了一遍，挑一个你顺手的对照着看：</p>
+    <div class="lang-links">
+      <a class="pill" href="../cpp/memento/README.md">C++</a>
+      <a class="pill" href="../go/memento/README.md">Go</a>
+      <a class="pill" href="../java/memento/README.md">Java</a>
+      <a class="pill" href="../js/memento/README.md">JavaScript</a>
+      <a class="pill" href="../objc/memento/README.md">Objective-C</a>
+      <a class="pill" href="../python/memento/README.md">Python</a>
+      <a class="pill" href="../rust/memento/README.md">Rust</a>
+      <a class="pill" href="../swift/memento/README.md">Swift</a>
+      <a class="pill" href="../ts/memento/README.md">TypeScript</a>
+    </div>
+  </section>
+
+  <nav class="pattern-nav">
+    <a class="prev" href="mediator.html"><span class="nav-label">← 上一个</span><span class="nav-title">中介者模式</span></a>
+    <a class="next" href="observer.html"><span class="nav-label">下一个 →</span><span class="nav-title">观察者模式</span></a>
+  </nav>
+
+</main>
+
+<footer class="site-footer">
+  <p>GoF 设计模式 · 大白话图解 —— 配套 <a href="../README.md">GoF 多语言实现仓库</a>（9 种语言 × 23 个模式）</p>
+</footer>
+
+</body>
+</html>
