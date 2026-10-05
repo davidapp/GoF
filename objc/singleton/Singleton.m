@@ -1,4 +1,5 @@
 #import "Singleton.h"
+#import <dispatch/dispatch.h>
 
 @implementation Logger
 
